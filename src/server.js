@@ -236,28 +236,42 @@ app.get('/laporan', requireAuth, asyncRoute(async (req, res) => {
 }));
 
 app.post('/api/webhook/evolution/:event?', asyncRoute(async (req, res) => {
+  const eventName = req.params.event || req.body?.event || 'unspecified';
+  console.info(JSON.stringify({ component: 'whatsapp-webhook', stage: 'received', event: eventName }));
   const secret = process.env.EVOLUTION_WEBHOOK_SECRET;
-  if (!secret) return res.status(503).json({ error: 'webhook_not_configured' });
+  if (!secret) {
+    console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'rejected', reason: 'secret_not_configured' }));
+    return res.status(503).json({ error: 'webhook_not_configured' });
+  }
   const supplied = req.get('x-webhook-secret') || req.query.secret || '';
-  if (supplied.length !== secret.length || !crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(secret))) return res.status(401).json({ error: 'unauthorized' });
+  if (supplied.length !== secret.length || !crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(secret))) {
+    console.warn(JSON.stringify({ component: 'whatsapp-webhook', stage: 'rejected', reason: 'invalid_secret' }));
+    return res.status(401).json({ error: 'unauthorized' });
+  }
   const data = req.body?.data && typeof req.body.data === 'object' ? req.body.data : req.body;
   const key = data?.key || {};
   const messageId = String(key.id || data?.id || '');
-  if (!messageId) return res.json({ status: 'ignored', reason: 'missing_message_id' });
+  if (!messageId) {
+    console.warn(JSON.stringify({ component: 'whatsapp-webhook', stage: 'ignored', reason: 'missing_message_id' }));
+    return res.json({ status: 'ignored', reason: 'missing_message_id' });
+  }
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
     const [insert] = await connection.execute('INSERT IGNORE INTO webhook_events (message_id,status) VALUES (?,?)', [messageId, 'ignored']);
-    if (!insert.affectedRows) { await connection.rollback(); return res.json({ status: 'duplicate' }); }
+    if (!insert.affectedRows) { await connection.rollback(); console.info(JSON.stringify({ component: 'whatsapp-webhook', stage: 'ignored', reason: 'duplicate_message' })); return res.json({ status: 'duplicate' }); }
     const parsed = parseTransactionMessage(extractMessageText(data));
     const phone = normalizePhone(String(key.remoteJidAlt || key.remoteJid || data?.remoteJidAlt || data?.remoteJid || '').split('@')[0]);
-    if (key.fromMe) { await connection.commit(); return res.json({ status: 'ignored' }); }
+    if (key.fromMe) { await connection.commit(); console.info(JSON.stringify({ component: 'whatsapp-webhook', stage: 'ignored', reason: 'message_from_bot' })); return res.json({ status: 'ignored' }); }
     const [users] = await connection.execute('SELECT id FROM users WHERE whatsapp_number=? LIMIT 1', [phone]);
-    if (!users.length) { await connection.commit(); return res.json({ status: 'unmatched_sender' }); }
+    if (!users.length) { await connection.commit(); console.warn(JSON.stringify({ component: 'whatsapp-webhook', stage: 'ignored', reason: 'sender_not_verified' })); return res.json({ status: 'unmatched_sender' }); }
     if (!parsed) {
       await connection.commit();
       const reply = await whatsappReply(extractMessageText(data), phone);
-      if (reply) { try { await sendWhatsApp(phone, reply); } catch (error) { console.error('Balasan WhatsApp gagal dikirim:', error.message); } }
+      if (reply) {
+        try { await sendWhatsApp(phone, reply); console.info(JSON.stringify({ component: 'whatsapp-webhook', stage: 'replied', command: 'help_or_report' })); }
+        catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
+      } else console.info(JSON.stringify({ component: 'whatsapp-webhook', stage: 'ignored', reason: 'unknown_command' }));
       return res.json({ status: reply ? 'replied' : 'ignored' });
     }
     await connection.execute('INSERT INTO transactions (user_id,kind,amount,category,note,happened_on,source) VALUES (?,?,?,?,?,CURDATE(),\'whatsapp\')', [users[0].id, parsed.kind, parsed.amount, parsed.category, parsed.note || null]);

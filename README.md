@@ -26,3 +26,9 @@ Webhook mengenali format payload pesan Evolution API `data.key.remoteJid` dan `d
 Untuk mengirim OTP dan balasan WhatsApp, aplikasi memanggil endpoint Evolution API `POST /message/sendText/{instance}` dengan header `apikey`. Isi `EVOLUTION_API_URL` dengan URL dasar API yang dapat dijangkau dari container aplikasi, dan pastikan koneksi WhatsApp instance Evolution berstatus aktif. Konfigurasikan event `MESSAGES_UPSERT` menuju `https://alamat-aplikasi/api/webhook/evolution?secret=NILAI_EVOLUTION_WEBHOOK_SECRET`. Matikan `webhook_by_events` atau `webhookByEvents`, karena endpoint utama sudah menerima event `MESSAGES_UPSERT`. `PUBLIC_URL` dapat diisi URL publik aplikasi agar ditampilkan pada pesan ringkasan WhatsApp.
 
 Evolution API mengirim pesan baru melalui event `MESSAGES_UPSERT` dan endpoint kirim teks menggunakan `POST /message/sendText/{instance}` dengan header API key. Lihat [dokumentasi webhook Evolution](https://github.com/evolution-foundation/evolution-docs/blob/main/docs/02-Configuration/Webhooks.md) dan [referensi endpoint kirim teks](https://skmtc.dev/evolution-foundation/apis/evolution-api-3/docs/message/sendText/:instance/post) untuk konfigurasi sesuai versi Evolution yang Anda jalankan.
+
+## Troubleshooting bot WhatsApp
+
+Setelah deploy perubahan, lihat log dengan `docker compose logs -f app`, lalu kirim `!help` dari WhatsApp yang nomornya terdaftar dan terverifikasi di MyKas. Log webhook menunjukkan apakah event diterima, secret salah, pengirim belum cocok, atau pengiriman balasan gagal. Pesan dari nomor WhatsApp bot sendiri diabaikan.
+
+Untuk mengecek koneksi jaringan ke Evolution dari container aplikasi, jalankan `docker exec mykas-app node -e "fetch(process.env.EVOLUTION_API_URL).then(r=>console.log('Evolution HTTP',r.status)).catch(e=>console.error(e.cause||e))"`. Status HTTP apa pun menunjukkan host dan port dapat dijangkau; `fetch failed` biasanya menandakan URL, jaringan Docker, atau port tidak cocok.
