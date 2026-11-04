@@ -35,6 +35,11 @@ async function remove(userId, transactionId) {
   return result.affectedRows > 0;
 }
 
+async function findById(userId, transactionId) {
+  const [rows] = await pool.execute('SELECT * FROM transactions WHERE id=? AND user_id=? LIMIT 1', [transactionId, userId]);
+  return rows[0] || null;
+}
+
 async function report(userId, start, end) {
   const [totals] = await pool.execute('SELECT kind,COALESCE(SUM(amount),0) total FROM transactions WHERE user_id=? AND happened_on BETWEEN ? AND ? GROUP BY kind', [userId, start, end]);
   const summary = Object.fromEntries(totals.map(row => [row.kind, Number(row.total)]));
@@ -51,4 +56,4 @@ async function createFromWebhook({ connection, userId, kind, amount, category, n
   return create({ userId, kind, amount, category, note, happenedOn: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }), source: 'whatsapp' });
 }
 
-module.exports = { create, createFromWebhook, dashboard, list, remove, report };
+module.exports = { create, createFromWebhook, dashboard, findById, list, remove, report };

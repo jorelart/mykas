@@ -11,6 +11,8 @@ const authRoutes = require('./routes/auth.routes');
 const transactionRoutes = require('./routes/transaction.routes');
 const reportRoutes = require('./routes/report.routes');
 const webhookRoutes = require('./routes/webhook.routes');
+const adminRoutes = require('./routes/admin.routes');
+const { formatTransactionReference } = require('./utils/transaction-reference');
 
 const app = express();
 const MySQLStore = MySQLStoreFactory(session);
@@ -46,6 +48,7 @@ app.use((req, res, next) => {
   res.locals.formatDate = value => new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }).format(new Date(value));
   res.locals.currentPath = req.path;
   res.locals.publicUrl = String(process.env.PUBLIC_URL || '').replace(/\/$/, '');
+  res.locals.formatTransactionReference = formatTransactionReference;
   next();
 });
 app.use(csrfProtection);
@@ -54,6 +57,7 @@ app.get('/', (req, res) => res.redirect(req.session.user ? '/dashboard' : '/logi
 app.use(authRoutes);
 app.use(transactionRoutes);
 app.use(reportRoutes);
+app.use(adminRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
 app.use((req, res) => res.status(404).render('error', { title: 'Halaman tidak ditemukan', message: 'Halaman yang Anda cari tidak tersedia.' }));

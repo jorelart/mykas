@@ -5,6 +5,7 @@ const WebhookEvent = require('../models/webhook-event.model');
 const { sendWhatsApp } = require('../utils/evolution');
 const { normalizePhone } = require('../utils/phone');
 const { buildBotReply, extractMessageText, formatMoney, parseTransactionMessage } = require('../utils/whatsapp-bot');
+const { formatTransactionReference } = require('../utils/transaction-reference');
 
 function log(stage, details = {}) {
   console.info(JSON.stringify({ component: 'whatsapp-webhook', stage, ...details }));
@@ -57,11 +58,13 @@ async function evolution(req, res) {
       return res.json({ status: 'replied' });
     }
 
-    await Transaction.createFromWebhook({ connection, userId: user.id, ...parsed });
+    const transactionId = await Transaction.createFromWebhook({ connection, userId: user.id, ...parsed });
     await WebhookEvent.markRecorded(connection, messageId);
     await connection.commit();
     try {
-      await sendWhatsApp(phone, `✅ ${parsed.kind === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil dicatat.\nKategori: *${parsed.category}*\nNominal: *${formatMoney(parsed.amount)}*\nKetik *!saldo* untuk ringkasan atau *!help* untuk daftar perintah.`);
+      const date = new Date().toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', day: '2-digit', month: 'long', year: 'numeric' });
+      const reference = formatTransactionReference(transactionId, new Date());
+      await sendWhatsApp(phone, `✅ ${parsed.kind === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil dicatat.\nID: *${reference}*\nTanggal: ${date}\nKategori: *${parsed.category}*\nNominal: *${formatMoney(parsed.amount)}*\nKetik *!saldo* untuk ringkasan atau *!help* untuk daftar perintah.`);
     } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
     log('transaction_recorded', { kind: parsed.kind, event: eventName });
     return res.json({ status: 'recorded' });

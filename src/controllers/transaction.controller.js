@@ -1,4 +1,5 @@
 const Transaction = require('../models/transaction.model');
+const { formatTransactionReference } = require('../utils/transaction-reference');
 
 async function dashboard(req, res) {
   const data = await Transaction.dashboard(req.session.user.id);
@@ -22,9 +23,15 @@ async function create(req, res) {
     req.flash('danger', 'Periksa kembali jenis, nominal, kategori, catatan, dan tanggal transaksi.');
     return res.redirect('/transaksi/tambah');
   }
-  await Transaction.create({ userId: req.session.user.id, kind, amount, category: category.trim(), note, happenedOn });
-  req.flash('success', 'Transaksi berhasil dicatat.');
+  const id = await Transaction.create({ userId: req.session.user.id, kind, amount, category: category.trim(), note, happenedOn });
+  req.flash('success', `Transaksi berhasil dicatat dengan ID ${formatTransactionReference(id, happenedOn)}.`);
   return res.redirect('/transaksi');
+}
+
+async function detail(req, res) {
+  const transaction = await Transaction.findById(req.session.user.id, req.params.id);
+  if (!transaction) return res.status(404).render('error', { title: 'Transaksi tidak ditemukan', message: 'Transaksi ini tidak ditemukan di akun Anda.' });
+  return res.render('transaction-detail', { title: 'Detail transaksi', transaction });
 }
 
 async function list(req, res) {
@@ -45,4 +52,4 @@ function validDate(value) {
     && !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) ? value : '';
 }
 
-module.exports = { addPage, create, dashboard, list, remove };
+module.exports = { addPage, create, dashboard, detail, list, remove };

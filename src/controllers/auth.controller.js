@@ -74,6 +74,7 @@ async function activate(req, res) {
   req.session.regenerate((error) => {
     if (error) return res.status(500).send('Gagal membuat sesi.');
     req.session.user = { id: account.id, name: account.name, email: account.email, whatsapp_number: account.whatsapp_number };
+    if (String(process.env.ADMIN_EMAIL || '').trim().toLowerCase() === String(account.email).toLowerCase()) req.session.user.role = 'admin';
     req.session.csrfToken = crypto.randomBytes(32).toString('hex');
     req.flash('success', `Selamat, ${account.name}! Pendaftaran berhasil dan akun WhatsApp Anda sudah aktif.`);
     return res.redirect('/dashboard');
@@ -96,6 +97,7 @@ async function login(req, res) {
   req.session.regenerate((error) => {
     if (error) return res.status(500).send('Gagal membuat sesi.');
     req.session.user = { id: account.id, name: account.name, email: account.email };
+    if (String(process.env.ADMIN_EMAIL || '').trim().toLowerCase() === String(account.email).toLowerCase()) req.session.user.role = 'admin';
     req.session.csrfToken = crypto.randomBytes(32).toString('hex');
     return res.redirect('/dashboard');
   });

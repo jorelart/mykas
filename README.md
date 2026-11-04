@@ -26,6 +26,8 @@ static/                     CSS dan aset frontend
 
 Skema database dibuat otomatis saat aplikasi mulai. Data MySQL tersimpan pada Docker volume `mysql_data`. Untuk melihat log, jalankan `docker compose logs -f app`.
 
+Untuk mengaktifkan panel admin, isi `ADMIN_EMAIL` di `.env` dengan email admin. Daftarkan dan verifikasi akun tersebut melalui OTP; setelah login akun itu akan melihat menu **Admin** di dashboard. Panel admin berisi ringkasan akun, transaksi terbaru seluruh pengguna, serta status aktivasi.
+
 `COOKIE_SECURE=false` mendukung pengembangan lokal melalui HTTP. Set nilainya menjadi `true` saat situs diakses melalui HTTPS.
 
 ## Fitur
@@ -34,6 +36,7 @@ Skema database dibuat otomatis saat aplikasi mulai. Data MySQL tersimpan pada Do
 - Aktivasi pendaftar dan reset kata sandi melalui OTP WhatsApp 6 digit (berlaku 5 menit, maksimal 5 percobaan, jeda 60 detik untuk kirim ulang).
 - Setelah aktivasi, pengguna menerima pesan WhatsApp selamat datang yang berisi daftar command bot.
 - Dashboard bulanan, transaksi pemasukan/pengeluaran, filter riwayat, hapus transaksi, dan laporan periode/kategori.
+- Detail transaksi dengan tanggal, sumber, catatan, serta ID referensi seperti `MK-20261104-000123`.
 - Setelah OTP benar, dashboard menampilkan ucapan bahwa pendaftaran berhasil dan akun telah aktif.
 - Bot WhatsApp menerima `!help`, `!masuk 5.000.000 Gaji`, `!keluar 25.000 Makan siang`, `!saldo`, `!laporan mingguan`, `!laporan bulanan`, dan `!dashboard`. Balasan transaksi mengonfirmasi kategori dan nominal; laporan menyertakan total serta kategori teratas.
 - Webhook memerlukan header `x-webhook-secret` atau parameter URL `?secret=...` yang nilainya sama dengan `EVOLUTION_WEBHOOK_SECRET`. Konfigurasikan event pesan masuk pada Evolution API dan arahkan ke endpoint tersebut.
