@@ -5,11 +5,11 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      PORT: 3000
+      PORT: ""
       DB_HOST: db
       DB_PORT: 3306
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "127.0.0.1:${APP_PORT}:3000"
     networks:
       - server
     depends_on:
