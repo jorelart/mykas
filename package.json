@@ -1,5 +1,5 @@
 {
-  "name": "kasirapi",
+  "name": "mykas",
   "version": "1.0.0",
   "private": true,
   "description": "Aplikasi pencatatan pemasukan dan pengeluaran dengan MySQL serta webhook Evolution API.",

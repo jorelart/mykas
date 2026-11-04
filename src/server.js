@@ -13,8 +13,8 @@ const app = express();
 const port = Number(process.env.PORT || 3000);
 const pool = mysql.createPool({
   host: process.env.DB_HOST || '127.0.0.1', port: Number(process.env.DB_PORT || 3306),
-  user: process.env.DB_USER || 'kasirapi', password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'kasirapi', waitForConnections: true,
+  user: process.env.DB_USER || 'mykas', password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'mykas', waitForConnections: true,
   connectionLimit: 10, timezone: '+07:00', charset: 'utf8mb4', decimalNumbers: true,
 });
 const MySQLStore = MySQLStoreFactory(session);
@@ -27,11 +27,11 @@ app.use(express.urlencoded({ extended: false, limit: '20kb' }));
 app.use(express.json({ limit: '1mb' }));
 app.use('/static', express.static(path.join(__dirname, '..', 'static'), { maxAge: '1d' }));
 app.use(session({
-  name: 'kasirapi.sid', secret: process.env.SESSION_SECRET || 'dev-only-change-this-secret',
+  name: 'mykas.sid', secret: process.env.SESSION_SECRET || 'dev-only-change-this-secret',
   store: new MySQLStore({
     host: process.env.DB_HOST || '127.0.0.1', port: Number(process.env.DB_PORT || 3306),
-    user: process.env.DB_USER || 'kasirapi', password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'kasirapi', schema: { tableName: 'sessions' },
+    user: process.env.DB_USER || 'mykas', password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'mykas', schema: { tableName: 'sessions' },
   }),
   resave: false, saveUninitialized: false,
   cookie: { httpOnly: true, sameSite: 'lax', secure: process.env.COOKIE_SECURE === 'true', maxAge: 7 * 24 * 60 * 60 * 1000 },
@@ -136,7 +136,7 @@ app.post('/aktivasi', asyncRoute(async (req, res) => {
   const [[account]] = await pool.execute('SELECT id,name,email,whatsapp_number FROM users WHERE id=?', [userId]);
   await pool.execute('UPDATE users SET is_verified=1 WHERE id=?', [userId]);
   delete req.session.pendingActivationUserId; delete req.session.pendingActivationPhone;
-  req.session.regenerate((err) => { if (err) return res.status(500).send('Gagal membuat sesi.'); req.session.user = { id: account.id, name: account.name, email: account.email, whatsapp_number: account.whatsapp_number }; req.session.csrfToken = crypto.randomBytes(32).toString('hex'); res.redirect('/dashboard'); });
+  req.session.regenerate((err) => { if (err) return res.status(500).send('Gagal membuat sesi.'); req.session.user = { id: account.id, name: account.name, email: account.email, whatsapp_number: account.whatsapp_number }; req.session.csrfToken = crypto.randomBytes(32).toString('hex'); req.flash('success', `Selamat, ${account.name}! Pendaftaran berhasil dan akun WhatsApp Anda sudah aktif.`); res.redirect('/dashboard'); });
 }));
 
 app.route('/login').get((req, res) => req.session.user ? res.redirect('/dashboard') : res.render('auth', { mode: 'login', title: 'Masuk' }))
@@ -260,10 +260,10 @@ app.post('/api/webhook/evolution/:event?', asyncRoute(async (req, res) => {
       if (reply) { try { await sendWhatsApp(phone, reply); } catch (error) { console.error('Balasan WhatsApp gagal dikirim:', error.message); } }
       return res.json({ status: reply ? 'replied' : 'ignored' });
     }
-    await connection.execute('INSERT INTO transactions (user_id,kind,amount,category,note,happened_on,source) VALUES (?,?,?,?,?,CURDATE(),\'whatsapp\')', [users[0].id, parsed.kind, parsed.amount, 'WhatsApp', parsed.note || 'Dicatat melalui WhatsApp']);
+    await connection.execute('INSERT INTO transactions (user_id,kind,amount,category,note,happened_on,source) VALUES (?,?,?,?,?,CURDATE(),\'whatsapp\')', [users[0].id, parsed.kind, parsed.amount, parsed.category, parsed.note || null]);
     await connection.execute('UPDATE webhook_events SET status=\'recorded\' WHERE message_id=?', [messageId]);
     await connection.commit();
-    try { await sendWhatsApp(phone, `✅ ${parsed.kind === 'income' ? 'Pemasukan' : 'Pengeluaran'} ${formatMoney(parsed.amount)} berhasil dicatat.${parsed.note ? `\nCatatan: ${parsed.note}` : ''}\nKetik *saldo* untuk ringkasan bulan ini.`); }
+    try { await sendWhatsApp(phone, `✅ ${parsed.kind === 'income' ? 'Pemasukan' : 'Pengeluaran'} berhasil dicatat.\nKategori: *${parsed.category}*\nNominal: *${formatMoney(parsed.amount)}*\nKetik *!saldo* untuk ringkasan atau *!help* untuk daftar perintah.`); }
     catch (error) { console.error('Konfirmasi transaksi WhatsApp gagal dikirim:', error.message); }
     return res.json({ status: 'recorded' });
   } catch (error) { await connection.rollback(); throw error; } finally { connection.release(); }
@@ -287,7 +287,7 @@ async function issueOtp(userId, purpose) {
     VALUES (?,?,?,DATE_ADD(NOW(),INTERVAL 5 MINUTE),0,NOW())
     ON DUPLICATE KEY UPDATE code_hash=VALUES(code_hash),expires_at=VALUES(expires_at),attempts=0,last_sent_at=NOW()`, [userId, purpose, otpDigest(userId, purpose, code)]);
   const label = purpose === 'activation' ? 'aktivasi akun' : 'reset kata sandi';
-  await sendWhatsApp(user.whatsapp_number, `Kode ${label} Kasirapi Anda: *${code}*\nKode berlaku 5 menit dan hanya dapat digunakan sekali.`);
+  await sendWhatsApp(user.whatsapp_number, `Kode ${label} MyKas Anda: *${code}*\nKode berlaku 5 menit dan hanya dapat digunakan sekali.`);
 }
 async function consumeOtp(userId, purpose, value) {
   const code = String(value || '').trim();
@@ -319,19 +319,26 @@ async function sendWhatsApp(number, text) {
 }
 function formatMoney(amount) { return `Rp ${new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(Number(amount || 0))}`; }
 async function whatsappReply(text, phone) {
-  const command = String(text || '').trim().toLowerCase();
+  const command = String(text || '').trim().toLowerCase().replace(/^!/, '');
   const [users] = await pool.execute('SELECT id FROM users WHERE whatsapp_number=? AND is_verified=1 LIMIT 1', [phone]);
   if (!users.length) return '';
-  if (command === 'saldo' || command === 'laporan') {
+  const reportMatch = command.match(/^laporan(?:\s+(mingguan|mmingguan|bulanan|weekly|monthly))?$/);
+  if (command === 'saldo' || reportMatch) {
+    const weekly = reportMatch && ['mingguan','mmingguan','weekly'].includes(reportMatch[1]);
+    const label = weekly ? 'Minggu ini' : 'Bulan ini';
+    const periodSql = weekly
+      ? 'happened_on>=DATE_SUB(CURDATE(),INTERVAL WEEKDAY(CURDATE()) DAY) AND happened_on<=CURDATE()'
+      : 'happened_on>=DATE_FORMAT(CURDATE(),\'%Y-%m-01\') AND happened_on<CURDATE()+INTERVAL 1 DAY';
     const [[totals]] = await pool.execute(`SELECT COALESCE(SUM(CASE WHEN kind='income' THEN amount ELSE 0 END),0) income,
-      COALESCE(SUM(CASE WHEN kind='expense' THEN amount ELSE 0 END),0) expense FROM transactions
-      WHERE user_id=? AND happened_on>=DATE_FORMAT(CURDATE(),'%Y-%m-01') AND happened_on<DATE_ADD(DATE_FORMAT(CURDATE(),'%Y-%m-01'),INTERVAL 1 MONTH)`, [users[0].id]);
-    return `📊 *Ringkasan bulan ini*\nPemasukan: ${formatMoney(totals.income)}\nPengeluaran: ${formatMoney(totals.expense)}\nSaldo bersih: ${formatMoney(Number(totals.income)-Number(totals.expense))}${process.env.PUBLIC_URL ? `\nDashboard: ${process.env.PUBLIC_URL.replace(/\/$/, '')}` : ''}`;
+      COALESCE(SUM(CASE WHEN kind='expense' THEN amount ELSE 0 END),0) expense FROM transactions WHERE user_id=? AND ${periodSql}`, [users[0].id]);
+    const [categories] = await pool.execute(`SELECT category,kind,SUM(amount) total FROM transactions WHERE user_id=? AND ${periodSql} GROUP BY category,kind ORDER BY total DESC LIMIT 4`, [users[0].id]);
+    const details = categories.length ? `\n\n*Kategori teratas*\n${categories.map(row => `• ${row.category} (${row.kind === 'income' ? 'masuk' : 'keluar'}): ${formatMoney(row.total)}`).join('\n')}` : '';
+    return `📊 *Laporan ${label}*\nPemasukan: ${formatMoney(totals.income)}\nPengeluaran: ${formatMoney(totals.expense)}\nSaldo bersih: ${formatMoney(Number(totals.income)-Number(totals.expense))}${details}${process.env.PUBLIC_URL ? `\n\nDashboard: ${process.env.PUBLIC_URL.replace(/\/$/, '')}` : ''}`;
   }
   if (command === 'dashboard') return process.env.PUBLIC_URL
-    ? `Buka dashboard Kasirapi: ${process.env.PUBLIC_URL.replace(/\/$/, '')}`
+    ? `Buka dashboard MyKas: ${process.env.PUBLIC_URL.replace(/\/$/, '')}`
     : 'Dashboard belum memiliki URL publik. Minta admin mengatur PUBLIC_URL.';
-  if (command === 'menu' || command === 'bantuan') return 'Perintah Kasirapi:\n• masuk 50000 Gaji\n• keluar 25000 Makan siang\n• saldo — ringkasan bulan ini\n• laporan — ringkasan bulan ini\n• dashboard — tautan dashboard';
+  if (['help','bantuan','menu'].includes(command)) return '*Perintah bot MyKas*\n\n• `!masuk 5000.000 Gaji` — catat pemasukan\n• `!keluar 25000 Makan siang` — catat pengeluaran\n• `!saldo` — ringkasan bulan ini\n• `!laporan mingguan` — laporan minggu ini\n• `!laporan bulanan` — laporan bulan ini\n• `!dashboard` — tautan dashboard web\n\nNominal boleh memakai titik pemisah ribuan. Contoh: `!masuk 1.500.000 Freelance`.';
   return '';
 }
 function validDate(value) { return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) ? value : ''; }
@@ -340,11 +347,12 @@ function extractMessageText(data) {
   return msg.conversation || msg.extendedTextMessage?.text || msg.imageMessage?.caption || msg.videoMessage?.caption || data?.text || '';
 }
 function parseTransactionMessage(text) {
-  const match = String(text || '').match(/^\s*(masuk|pemasukan|keluar|pengeluaran)\s+([\d.,]+)(?:\s+(.+))?\s*$/i);
+  const match = String(text || '').match(/^\s*!?\s*(masuk|pemasukan|keluar|pengeluaran)\s+([\d.,]+)(?:\s+(.+))?\s*$/i);
   if (!match) return null;
   const amount = Number(match[2].replace(/[.,]/g, ''));
   if (!Number.isSafeInteger(amount) || amount <= 0 || amount > 99999999999999) return null;
-  return { kind: /^(masuk|pemasukan)$/i.test(match[1]) ? 'income' : 'expense', amount, note: (match[3] || '').trim().slice(0, 240) };
+  const category = (match[3] || '').trim().slice(0, 80) || 'WhatsApp';
+  return { kind: /^(masuk|pemasukan)$/i.test(match[1]) ? 'income' : 'expense', amount, category, note: null };
 }
 
 async function start() {
@@ -358,7 +366,7 @@ async function start() {
     }
     catch (error) { if (attempt >= 30) throw error; console.log(`Menunggu MySQL (${attempt}/30)...`); await new Promise(resolve => setTimeout(resolve, 2000)); }
   }
-  app.listen(port, '0.0.0.0', () => console.log(`Kasirapi berjalan di port ${port}`));
+  app.listen(port, '0.0.0.0', () => console.log(`MyKas berjalan di port ${port}`));
 }
 if (require.main === module) start().catch(error => { console.error('Gagal memulai aplikasi:', error); process.exit(1); });
 module.exports = { app, parseTransactionMessage, normalizePhone };

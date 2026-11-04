@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    container_name: kasirapi-app
+    container_name: mykas-app
     restart: unless-stopped
     env_file: .env
     environment:
@@ -21,11 +21,11 @@ services:
 
   db:
     image: mysql:8.4
-    container_name: kasirapi-db
+    container_name: mykas-db
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_NAME:-kasirapi}
-      MYSQL_USER: ${DB_USER:-kasirapi}
+      MYSQL_DATABASE: ${DB_NAME:-mykas}
+      MYSQL_USER: ${DB_USER:-mykas}
       MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
       TZ: Asia/Jakarta

@@ -1,4 +1,4 @@
-# Kasirapi
+# MyKas
 
 Aplikasi pencatatan pemasukan dan pengeluaran berbasis Node.js, Express, EJS, dan MySQL. Docker Compose menjalankan aplikasi dan database dalam satu perintah.
 
@@ -17,11 +17,11 @@ Skema database dibuat otomatis saat aplikasi mulai. Data MySQL tersimpan pada Do
 - Registrasi dan login dengan hash kata sandi, sesi tersimpan di MySQL, dan perlindungan CSRF untuk formulir.
 - Aktivasi pendaftar dan reset kata sandi melalui OTP WhatsApp 6 digit (berlaku 5 menit, maksimal 5 percobaan, jeda 60 detik untuk kirim ulang).
 - Dashboard bulanan, transaksi pemasukan/pengeluaran, filter riwayat, hapus transaksi, dan laporan periode/kategori.
-- Webhook Evolution API di `POST /api/webhook/evolution`. Pesan seperti `masuk 50000 Gaji` dan `keluar 25000 Makan siang` akan dicatat untuk akun yang nomor WhatsApp-nya cocok.
-- Pengguna juga dapat mengirim `saldo` atau `laporan` melalui WhatsApp untuk menerima ringkasan bulan berjalan, `dashboard` untuk tautan dashboard web, atau `bantuan` untuk melihat format perintah.
+- Setelah OTP benar, dashboard menampilkan ucapan bahwa pendaftaran berhasil dan akun telah aktif.
+- Bot WhatsApp menerima `!help`, `!masuk 5.000.000 Gaji`, `!keluar 25.000 Makan siang`, `!saldo`, `!laporan mingguan`, `!laporan bulanan`, dan `!dashboard`. Balasan transaksi mengonfirmasi kategori dan nominal; laporan menyertakan total serta kategori teratas.
 - Webhook memerlukan header `x-webhook-secret` atau parameter URL `?secret=...` yang nilainya sama dengan `EVOLUTION_WEBHOOK_SECRET`. Konfigurasikan event pesan masuk pada Evolution API dan arahkan ke endpoint tersebut.
 
-Webhook mengenali format payload pesan Evolution API `data.key.remoteJid` dan `data.message`. Pastikan instance Evolution dapat menjangkau host aplikasi; untuk deployment publik gunakan URL HTTPS.
+Webhook mengenali format payload pesan Evolution API `data.key.remoteJid` dan `data.message`. Nominal titik atau koma diperlakukan sebagai pemisah ribuan. Pastikan instance Evolution dapat menjangkau host aplikasi; untuk deployment publik gunakan URL HTTPS.
 
 Untuk mengirim OTP dan balasan WhatsApp, aplikasi memanggil endpoint Evolution API `POST /message/sendText/{instance}` dengan header `apikey`. Isi `EVOLUTION_API_URL` dengan URL dasar API yang dapat dijangkau dari container aplikasi, dan pastikan koneksi WhatsApp instance Evolution berstatus aktif. Konfigurasikan event `MESSAGES_UPSERT` menuju `https://alamat-aplikasi/api/webhook/evolution?secret=NILAI_EVOLUTION_WEBHOOK_SECRET`. Matikan `webhook_by_events` atau `webhookByEvents`, karena endpoint utama sudah menerima event `MESSAGES_UPSERT`. `PUBLIC_URL` dapat diisi URL publik aplikasi agar ditampilkan pada pesan ringkasan WhatsApp.
 
