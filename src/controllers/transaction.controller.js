@@ -24,7 +24,7 @@ async function create(req, res) {
     return res.redirect('/transaksi/tambah');
   }
   const id = await Transaction.create({ userId: req.session.user.id, kind, amount, category: category.trim(), note, happenedOn });
-  req.flash('success', `Transaksi berhasil dicatat dengan ID ${formatTransactionReference(id, happenedOn)}.`);
+  req.flash('success', `Transaksi berhasil dicatat dengan ID ${formatTransactionReference(id)}.`);
   return res.redirect('/transaksi');
 }
 
@@ -42,8 +42,8 @@ async function list(req, res) {
 }
 
 async function remove(req, res) {
-  await Transaction.remove(req.session.user.id, req.params.id);
-  req.flash('success', 'Transaksi berhasil dihapus.');
+  const removed = await Transaction.remove(req.session.user.id, req.params.id);
+  req.flash(removed ? 'success' : 'warning', removed ? 'Transaksi dihapus dari riwayat aktif.' : 'Transaksi tidak ditemukan atau sudah dihapus.');
   return res.redirect('/transaksi');
 }
 

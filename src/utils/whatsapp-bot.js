@@ -19,8 +19,12 @@ function parseTransactionMessage(text) {
   return { kind: /^(masuk|pemasukan)$/i.test(match[1]) ? 'income' : 'expense', amount, category, note: null };
 }
 
-function helpMessage() {
+function baseHelpMessage() {
   return '*Perintah bot MyKas*\n\n• `!masuk 5000.000 Gaji` — catat pemasukan\n• `!keluar 25000 Makan siang` — catat pengeluaran\n• `!saldo` — ringkasan bulan ini\n• `!laporan mingguan` — laporan minggu ini\n• `!laporan bulanan` — laporan bulan ini\n• `!dashboard` — tautan dashboard web\n\nNominal boleh memakai titik pemisah ribuan. Contoh: `!masuk 1.500.000 Freelance`.';
+}
+
+function helpMessage() {
+  return `${baseHelpMessage()}\n\nHapus transaksi: !hapus MK-000123, lalu konfirmasi dengan !konfirmasi hapus dalam 5 menit. Untuk batal, ketik !batal hapus.`;
 }
 
 function welcomeMessage(name) {
@@ -40,8 +44,8 @@ async function buildBotReply(text, phone) {
       ? 'happened_on>=DATE_SUB(CURDATE(),INTERVAL WEEKDAY(CURDATE()) DAY) AND happened_on<=CURDATE()'
       : 'happened_on>=DATE_FORMAT(CURDATE(),\'%Y-%m-01\') AND happened_on<CURDATE()+INTERVAL 1 DAY';
     const [[totals]] = await pool.execute(`SELECT COALESCE(SUM(CASE WHEN kind='income' THEN amount ELSE 0 END),0) income,
-      COALESCE(SUM(CASE WHEN kind='expense' THEN amount ELSE 0 END),0) expense FROM transactions WHERE user_id=? AND ${periodSql}`, [users[0].id]);
-    const [categories] = await pool.execute(`SELECT category,kind,SUM(amount) total FROM transactions WHERE user_id=? AND ${periodSql} GROUP BY category,kind ORDER BY total DESC LIMIT 4`, [users[0].id]);
+      COALESCE(SUM(CASE WHEN kind='expense' THEN amount ELSE 0 END),0) expense FROM transactions WHERE user_id=? AND deleted_at IS NULL AND ${periodSql}`, [users[0].id]);
+    const [categories] = await pool.execute(`SELECT category,kind,SUM(amount) total FROM transactions WHERE user_id=? AND deleted_at IS NULL AND ${periodSql} GROUP BY category,kind ORDER BY total DESC LIMIT 4`, [users[0].id]);
     const details = categories.length ? `\n\n*Kategori teratas*\n${categories.map(row => `• ${row.category} (${row.kind === 'income' ? 'masuk' : 'keluar'}): ${formatMoney(row.total)}`).join('\n')}` : '';
     const dashboard = process.env.PUBLIC_URL ? `\n\nDashboard: ${process.env.PUBLIC_URL.replace(/\/$/, '')}` : '';
     return `📊 *Laporan ${label}*\nPemasukan: ${formatMoney(totals.income)}\nPengeluaran: ${formatMoney(totals.expense)}\nSaldo bersih: ${formatMoney(Number(totals.income) - Number(totals.expense))}${details}${dashboard}`;

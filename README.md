@@ -35,10 +35,10 @@ Untuk mengaktifkan panel admin, isi `ADMIN_EMAIL` di `.env` dengan email admin. 
 - Registrasi dan login dengan hash kata sandi, sesi tersimpan di MySQL, dan perlindungan CSRF untuk formulir.
 - Aktivasi pendaftar dan reset kata sandi melalui OTP WhatsApp 6 digit (berlaku 5 menit, maksimal 5 percobaan, jeda 60 detik untuk kirim ulang).
 - Setelah aktivasi, pengguna menerima pesan WhatsApp selamat datang yang berisi daftar command bot.
-- Dashboard bulanan, transaksi pemasukan/pengeluaran, filter riwayat, hapus transaksi, dan laporan periode/kategori.
-- Detail transaksi dengan tanggal, sumber, catatan, serta ID referensi seperti `MK-20261104-000123`.
+- Dashboard bulanan, transaksi pemasukan/pengeluaran, filter riwayat, soft delete transaksi, dan laporan periode/kategori.
+- Detail transaksi dengan tanggal, sumber, catatan, serta ID nomor urut seperti `MK-000123`.
 - Setelah OTP benar, dashboard menampilkan ucapan bahwa pendaftaran berhasil dan akun telah aktif.
-- Bot WhatsApp menerima `!help`, `!masuk 5.000.000 Gaji`, `!keluar 25.000 Makan siang`, `!saldo`, `!laporan mingguan`, `!laporan bulanan`, dan `!dashboard`. Balasan transaksi mengonfirmasi kategori dan nominal; laporan menyertakan total serta kategori teratas.
+- Bot WhatsApp menerima `!help`, `!masuk 5.000.000 Gaji`, `!keluar 25.000 Makan siang`, `!hapus MK-000123` (diikuti `!konfirmasi hapus` atau `!batal hapus` dalam 5 menit), `!saldo`, `!laporan mingguan`, `!laporan bulanan`, dan `!dashboard`. Balasan transaksi mengonfirmasi kategori dan nominal; laporan menyertakan total serta kategori teratas.
 - Webhook memerlukan header `x-webhook-secret` atau parameter URL `?secret=...` yang nilainya sama dengan `EVOLUTION_WEBHOOK_SECRET`. Konfigurasikan event pesan masuk pada Evolution API dan arahkan ke endpoint tersebut.
 
 Webhook mengenali format payload pesan Evolution API `data.key.remoteJid` dan `data.message`. Nominal titik atau koma diperlakukan sebagai pemisah ribuan. Pastikan instance Evolution dapat menjangkau host aplikasi; untuk deployment publik gunakan URL HTTPS.

@@ -27,6 +27,7 @@ const schema = [
     amount DECIMAL(14,2) NOT NULL, category VARCHAR(80) NOT NULL, note VARCHAR(240) NULL,
     happened_on DATE NOT NULL, source ENUM('manual','whatsapp') NOT NULL DEFAULT 'manual',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     INDEX idx_tx_user_date (user_id,happened_on),
     CONSTRAINT fk_tx_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
@@ -34,6 +35,12 @@ const schema = [
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     message_id VARCHAR(180) NOT NULL UNIQUE, status VARCHAR(24) NOT NULL DEFAULT 'ignored',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+  `CREATE TABLE IF NOT EXISTS pending_transaction_deletions (
+    user_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    transaction_id BIGINT UNSIGNED NOT NULL,
+    expires_at DATETIME NOT NULL,
+    CONSTRAINT fk_pending_delete_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
   `CREATE TABLE IF NOT EXISTS otp_codes (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -50,6 +57,8 @@ async function initializeDatabase() {
     try {
       await pool.query('SELECT 1');
       for (const statement of schema) await pool.query(statement);
+      try { await pool.query('ALTER TABLE transactions ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL'); }
+      catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error; }
       try { await pool.query('ALTER TABLE users ADD COLUMN is_verified TINYINT(1) NOT NULL DEFAULT 1'); }
       catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error; }
       return;
