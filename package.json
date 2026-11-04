@@ -4,7 +4,7 @@
   "private": true,
   "description": "Aplikasi pencatatan pemasukan dan pengeluaran dengan MySQL serta webhook Evolution API.",
   "main": "src/server.js",
-  "scripts": { "start": "node src/server.js", "dev": "node --watch src/server.js" },
+  "scripts": { "start": "node src/server.js", "dev": "node --watch src/server.js", "push": "git add . && git commit -m 'Update' && git push -u origin main" },
   "engines": { "node": ">=20" },
   "dependencies": {
     "bcryptjs": "^2.4.3",

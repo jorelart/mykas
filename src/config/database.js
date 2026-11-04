@@ -23,13 +23,26 @@ const schema = [
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
   `CREATE TABLE IF NOT EXISTS transactions (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT UNSIGNED NOT NULL, kind ENUM('income','expense') NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL, wallet_id BIGINT UNSIGNED NULL, kind ENUM('income','expense') NOT NULL,
     amount DECIMAL(14,2) NOT NULL, category VARCHAR(80) NOT NULL, note VARCHAR(240) NULL,
     happened_on DATE NOT NULL, source ENUM('manual','whatsapp') NOT NULL DEFAULT 'manual',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL DEFAULT NULL,
     INDEX idx_tx_user_date (user_id,happened_on),
     CONSTRAINT fk_tx_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+  `CREATE TABLE IF NOT EXISTS wallets (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    user_phone VARCHAR(24) NOT NULL, user_id BIGINT UNSIGNED NOT NULL,
+    name VARCHAR(60) NOT NULL, balance DECIMAL(14,2) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_wallet_phone_name(user_phone,name), INDEX idx_wallet_user(user_id),
+    CONSTRAINT fk_wallet_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+  `CREATE TABLE IF NOT EXISTS user_sessions (
+    phone_number VARCHAR(24) NOT NULL PRIMARY KEY, active_wallet_id BIGINT UNSIGNED NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_session_wallet FOREIGN KEY (active_wallet_id) REFERENCES wallets(id) ON DELETE SET NULL
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
   `CREATE TABLE IF NOT EXISTS webhook_events (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -57,6 +70,10 @@ async function initializeDatabase() {
     try {
       await pool.query('SELECT 1');
       for (const statement of schema) await pool.query(statement);
+      try { await pool.query('ALTER TABLE transactions ADD COLUMN wallet_id BIGINT UNSIGNED NULL'); }
+      catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error; }
+      try { await pool.query('ALTER TABLE transactions ADD CONSTRAINT fk_tx_wallet FOREIGN KEY (wallet_id) REFERENCES wallets(id) ON DELETE RESTRICT'); }
+      catch (error) { if (!['ER_FK_DUP_NAME', 'ER_DUP_KEYNAME'].includes(error.code)) throw error; }
       try { await pool.query('ALTER TABLE transactions ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL'); }
       catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error; }
       try { await pool.query('ALTER TABLE users ADD COLUMN is_verified TINYINT(1) NOT NULL DEFAULT 1'); }

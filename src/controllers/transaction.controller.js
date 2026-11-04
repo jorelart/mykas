@@ -1,4 +1,5 @@
 const Transaction = require('../models/transaction.model');
+const Wallet = require('../models/wallet.model');
 const { formatTransactionReference } = require('../utils/transaction-reference');
 
 async function dashboard(req, res) {
@@ -51,7 +52,35 @@ async function list(req, res) {
   const kind = ['income', 'expense'].includes(req.query.jenis) ? req.query.jenis : '';
   const start = validDate(req.query.dari), end = validDate(req.query.sampai);
   const rows = await Transaction.list(req.session.user.id, { kind, start, end });
-  res.render('transactions', { title: 'Transaksi', rows, kind, start: start || '', end: end || '' });
+  const wallets = await Wallet.list(null, req.session.user.id);
+  res.render('transactions', { title: 'Transaksi', rows, wallets, kind, start: start || '', end: end || '' });
+}
+
+async function createWallet(req, res) {
+  const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+  if (!name || name.length > 60) {
+    req.flash('danger', 'Nama dompet wajib diisi dan maksimal 60 karakter.');
+    return res.redirect('/transaksi');
+  }
+  try {
+    await Wallet.createForUser(req.session.user.id, name);
+    req.flash('success', `Dompet “${name}” berhasil dibuat.`);
+  } catch (error) {
+    if (error.code !== 'ER_DUP_ENTRY') throw error;
+    req.flash('warning', `Dompet “${name}” sudah ada.`);
+  }
+  return res.redirect('/transaksi');
+}
+
+async function assignWallet(req, res) {
+  const walletId = Number(req.body.wallet_id);
+  if (!Number.isSafeInteger(walletId) || walletId <= 0) {
+    req.flash('danger', 'Pilih dompet yang valid.');
+    return res.redirect('/transaksi');
+  }
+  const moved = await Transaction.assignToWallet(req.session.user.id, req.params.id, walletId);
+  req.flash(moved ? 'success' : 'warning', moved ? 'Transaksi dipindahkan ke dompet. Saldo dompet sudah diperbarui.' : 'Transaksi atau dompet tidak ditemukan, atau transaksi sudah memiliki dompet.');
+  return res.redirect('/transaksi');
 }
 
 async function remove(req, res) {
@@ -77,4 +106,4 @@ function parseTransaction(body) {
   return { kind, amount, category, note, happenedOn };
 }
 
-module.exports = { addPage, create, dashboard, detail, editPage, list, remove, update };
+module.exports = { addPage, assignWallet, create, createWallet, dashboard, detail, editPage, list, remove, update };

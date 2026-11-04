@@ -6,6 +6,8 @@ const Transaction = require('../controllers/transaction.controller');
 const router = express.Router();
 router.get('/dashboard', requireAuth, asyncRoute(Transaction.dashboard));
 router.get('/transaksi', requireAuth, asyncRoute(Transaction.list));
+router.post('/transaksi/dompet', requireAuth, asyncRoute(Transaction.createWallet));
+router.post('/transaksi/:id/dompet', requireAuth, asyncRoute(Transaction.assignWallet));
 router.get('/transaksi/tambah', requireAuth, Transaction.addPage);
 router.post('/transaksi/tambah', requireAuth, asyncRoute(Transaction.create));
 router.get('/transaksi/:id/edit', requireAuth, asyncRoute(Transaction.editPage));
