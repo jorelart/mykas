@@ -32,6 +32,7 @@ Skema database dibuat otomatis saat aplikasi mulai. Data MySQL tersimpan pada Do
 
 - Registrasi dan login dengan hash kata sandi, sesi tersimpan di MySQL, dan perlindungan CSRF untuk formulir.
 - Aktivasi pendaftar dan reset kata sandi melalui OTP WhatsApp 6 digit (berlaku 5 menit, maksimal 5 percobaan, jeda 60 detik untuk kirim ulang).
+- Setelah aktivasi, pengguna menerima pesan WhatsApp selamat datang yang berisi daftar command bot.
 - Dashboard bulanan, transaksi pemasukan/pengeluaran, filter riwayat, hapus transaksi, dan laporan periode/kategori.
 - Setelah OTP benar, dashboard menampilkan ucapan bahwa pendaftaran berhasil dan akun telah aktif.
 - Bot WhatsApp menerima `!help`, `!masuk 5.000.000 Gaji`, `!keluar 25.000 Makan siang`, `!saldo`, `!laporan mingguan`, `!laporan bulanan`, dan `!dashboard`. Balasan transaksi mengonfirmasi kategori dan nominal; laporan menyertakan total serta kategori teratas.
@@ -45,6 +46,6 @@ Evolution API mengirim pesan baru melalui event `MESSAGES_UPSERT` dan endpoint k
 
 ## Troubleshooting bot WhatsApp
 
-Setelah deploy perubahan, lihat log dengan `docker compose logs -f app`, lalu kirim `!help` dari WhatsApp yang nomornya terdaftar dan terverifikasi di MyKas. Access log akan menampilkan baris JSON seperti `{"component":"http","method":"POST","path":"/api/webhook/evolution","status":401}`. Query string tidak dicatat agar secret webhook tidak muncul di log. Baris `component: whatsapp-webhook` memberi alasan jika event diterima tetapi ditolak atau diabaikan. Pesan dari nomor WhatsApp bot sendiri diabaikan.
+Setelah deploy perubahan, lihat log dengan `docker compose logs -f app`, lalu kirim `!help` dari WhatsApp yang nomornya terdaftar dan terverifikasi di MyKas. Access log hanya menampilkan request gagal (status 4xx/5xx), jadi polling `/health` dan halaman sukses tidak memenuhi log. Query string tidak dicatat agar secret webhook tidak muncul di log. Baris `component: whatsapp-webhook` mencatat event penting dan alasan jika webhook ditolak atau perintah diabaikan. Pesan dari nomor WhatsApp bot sendiri diabaikan.
 
 Untuk mengecek koneksi jaringan ke Evolution dari container aplikasi, jalankan `docker exec mykas-app node -e "fetch(process.env.EVOLUTION_API_URL).then(r=>console.log('Evolution HTTP',r.status)).catch(e=>console.error(e.cause||e))"`. Status HTTP apa pun menunjukkan host dan port dapat dijangkau; `fetch failed` biasanya menandakan URL, jaringan Docker, atau port tidak cocok.

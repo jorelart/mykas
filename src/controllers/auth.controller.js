@@ -4,6 +4,7 @@ const User = require('../models/user.model');
 const Otp = require('../models/otp.model');
 const { evolutionReady, sendWhatsApp } = require('../utils/evolution');
 const { normalizePhone } = require('../utils/phone');
+const { welcomeMessage } = require('../utils/whatsapp-bot');
 
 function renderLogin(req, res) {
   if (req.session.user) return res.redirect('/dashboard');
@@ -66,6 +67,8 @@ async function activate(req, res) {
   const account = await User.findById(userId);
   if (!account) return res.redirect('/register');
   await User.activate(userId);
+  try { await sendWhatsApp(account.whatsapp_number, welcomeMessage(account.name)); }
+  catch (error) { console.error(JSON.stringify({ component: 'welcome-message', stage: 'send_failed', message: error.message })); }
   delete req.session.pendingActivationUserId;
   delete req.session.pendingActivationPhone;
   req.session.regenerate((error) => {

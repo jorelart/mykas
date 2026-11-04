@@ -19,6 +19,14 @@ function parseTransactionMessage(text) {
   return { kind: /^(masuk|pemasukan)$/i.test(match[1]) ? 'income' : 'expense', amount, category, note: null };
 }
 
+function helpMessage() {
+  return '*Perintah bot MyKas*\n\n• `!masuk 5000.000 Gaji` — catat pemasukan\n• `!keluar 25000 Makan siang` — catat pengeluaran\n• `!saldo` — ringkasan bulan ini\n• `!laporan mingguan` — laporan minggu ini\n• `!laporan bulanan` — laporan bulan ini\n• `!dashboard` — tautan dashboard web\n\nNominal boleh memakai titik pemisah ribuan. Contoh: `!masuk 1.500.000 Freelance`.';
+}
+
+function welcomeMessage(name) {
+  return `🎉 Selamat datang di MyKas, ${name}!\nAkun WhatsApp Anda berhasil diaktifkan. Anda bisa mencatat transaksi dan melihat ringkasan langsung melalui chat.\n\n${helpMessage()}`;
+}
+
 async function buildBotReply(text, phone) {
   const command = String(text || '').trim().toLowerCase().replace(/^!/, '');
   const [users] = await pool.execute('SELECT id FROM users WHERE whatsapp_number=? AND is_verified=1 LIMIT 1', [phone]);
@@ -41,8 +49,8 @@ async function buildBotReply(text, phone) {
   if (command === 'dashboard') return process.env.PUBLIC_URL
     ? `Buka dashboard MyKas: ${process.env.PUBLIC_URL.replace(/\/$/, '')}`
     : 'Dashboard belum memiliki URL publik. Minta admin mengatur PUBLIC_URL.';
-  if (['help', 'bantuan', 'menu'].includes(command)) return '*Perintah bot MyKas*\n\n• `!masuk 5000.000 Gaji` — catat pemasukan\n• `!keluar 25000 Makan siang` — catat pengeluaran\n• `!saldo` — ringkasan bulan ini\n• `!laporan mingguan` — laporan minggu ini\n• `!laporan bulanan` — laporan bulan ini\n• `!dashboard` — tautan dashboard web\n\nNominal boleh memakai titik pemisah ribuan. Contoh: `!masuk 1.500.000 Freelance`.';
+  if (['help', 'bantuan', 'menu'].includes(command)) return helpMessage();
   return '';
 }
 
-module.exports = { buildBotReply, extractMessageText, formatMoney, parseTransactionMessage };
+module.exports = { buildBotReply, extractMessageText, formatMoney, helpMessage, parseTransactionMessage, welcomeMessage };
