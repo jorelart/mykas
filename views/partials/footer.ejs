@@ -1,1 +1,15 @@
-<% if (user) { %></section><footer class="footer">© 2026 MyKas <span>Keuangan lebih tertata, keputusan lebih bermakna.</span></footer></main></div><% } else { %></div><div class="auth-foot">© 2026 MyKas · Catatan keuangan Anda, dalam satu tempat.</div></main><% } %></body></html>
+<% if (user) { %></section><footer class="footer">© 2026 MyKas <span>Keuangan lebih tertata, keputusan lebih bermakna.</span></footer></main></div><% } else { %></div><div class="auth-foot">© 2026 MyKas · Catatan keuangan Anda, dalam satu tempat.</div></main><% } %><script>
+document.addEventListener('submit', async (event) => {
+  const form = event.target.closest('.delete-confirm-form');
+  if (!form || form.dataset.confirmed === 'true') return;
+  event.preventDefault();
+  const message = 'Transaksi akan disembunyikan dari riwayat dan laporan. Data tetap tersimpan sebagai soft delete.';
+  const result = window.Swal
+    ? await Swal.fire({ title: 'Hapus transaksi?', text: message, icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, hapus', cancelButtonText: 'Batal', confirmButtonColor: '#d76868', reverseButtons: true, focusCancel: true })
+    : { isConfirmed: window.confirm(`${message} Lanjutkan?`) };
+  if (result.isConfirmed) {
+    form.dataset.confirmed = 'true';
+    HTMLFormElement.prototype.submit.call(form);
+  }
+});
+</script></body></html>

@@ -18,6 +18,15 @@ async function create({ userId, kind, amount, category, note, happenedOn, source
   return result.insertId;
 }
 
+async function update(userId, transactionId, { kind, amount, category, note, happenedOn }) {
+  const [result] = await pool.execute(
+    'UPDATE transactions SET kind=?,amount=?,category=?,note=?,happened_on=? WHERE id=? AND user_id=? AND deleted_at IS NULL',
+    [kind, amount, category, note || null, happenedOn, transactionId, userId],
+  );
+  if (result.affectedRows > 0) return true;
+  return Boolean(await findById(userId, transactionId));
+}
+
 async function list(userId, { kind, start, end, limit = 250 }) {
   let sql = 'SELECT * FROM transactions WHERE user_id=? AND deleted_at IS NULL';
   const params = [userId];
@@ -56,4 +65,4 @@ async function createFromWebhook({ connection, userId, kind, amount, category, n
   return create({ userId, kind, amount, category, note, happenedOn: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }), source: 'whatsapp' });
 }
 
-module.exports = { create, createFromWebhook, dashboard, findById, list, remove, report };
+module.exports = { create, createFromWebhook, dashboard, findById, list, remove, report, update };

@@ -25,6 +25,7 @@ app.use(helmet({ contentSecurityPolicy: false }));
 app.use(express.urlencoded({ extended: false, limit: '20kb' }));
 app.use(express.json({ limit: '1mb' }));
 app.use('/static', express.static(path.join(__dirname, '..', 'static'), { maxAge: '1d' }));
+app.use('/vendor/sweetalert2', express.static(path.join(__dirname, '..', 'node_modules', 'sweetalert2', 'dist'), { maxAge: '7d' }));
 app.use(session({
   name: 'mykas.sid',
   secret: process.env.SESSION_SECRET || 'dev-only-change-this-secret',

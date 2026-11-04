@@ -5,3 +5,44 @@
 .auth-switch .forgot-link{display:inline-block;margin:12px 0 0}.resend-form{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:15px;color:#8d98a7;font-size:10px}.resend-form button{border:0;background:transparent;color:#5c6fdf;font-size:10px;font-weight:700;cursor:pointer;padding:4px}.resend-form button:hover,.auth-switch a:hover{text-decoration:underline}
 .reference-link{font:600 9px Consolas,monospace;color:#5d6fd8;white-space:nowrap}.reference-link:hover,.transaction-detail-link:hover{color:#364cc9;text-decoration:underline}.transaction-detail-link{color:inherit}.detail-layout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px;align-items:start}.detail-panel{padding:24px}.detail-top{display:flex;align-items:center;justify-content:space-between}.detail-amount{font:700 30px var(--display);letter-spacing:-.8px;margin:20px 0;color:#314057}.detail-amount.income{color:#209a74}.detail-amount.expense{color:#d8804d}.detail-reference{border:1px solid #e9edf3;background:#fafbfd;border-radius:8px;padding:12px 14px;display:grid;gap:6px;margin-bottom:20px}.detail-reference span,.detail-grid span{font-size:9px;color:#929dad}.detail-reference strong{font:700 12px Consolas,monospace;color:#5267df}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:17px 20px}.detail-grid>div{display:grid;gap:6px}.detail-grid strong{font-size:11px;color:#405067}.detail-grid .detail-note{grid-column:1/-1;border-top:1px solid #eef0f4;padding-top:15px}.detail-side{padding:22px}.detail-side h3{font:700 13px var(--display);margin:13px 0 7px}.detail-side p{font-size:10px;line-height:1.7;color:#8591a3;margin:0 0 17px}.admin-badge{border-radius:20px;background:#eef0ff;color:#586de0;font-size:9px;font-weight:700;letter-spacing:1px;padding:7px 11px}.admin-stats{margin-bottom:26px}.admin-user{display:grid;gap:4px}.admin-user strong{font-size:10px;color:#354258}.admin-user small{font-size:9px;color:#8d98a8}
 @media(max-width:760px){.detail-layout{grid-template-columns:1fr}.detail-side{display:none}.detail-panel{padding:18px 15px}.detail-grid{gap:14px}.detail-amount{font-size:25px}}
+
+/* Mobile layout: replace the narrow icon rail with a usable bottom navigation. */
+@media(max-width:760px){
+  .sidebar{inset:auto 0 0;width:100%;height:68px;flex-direction:row;padding:4px 8px;box-shadow:0 -4px 18px #19243a12}
+  .sidebar .brand,.sidebar .side-label{display:none}
+  .sidebar .sidebar-bottom{display:block;position:fixed;top:6px;right:8px;margin:0}
+  .sidebar .help-card,.sidebar .profile-copy{display:none}
+  .sidebar .profile{border:0;padding:0;gap:0}
+  .sidebar .profile form{display:block}
+  .sidebar .logout{width:40px;height:40px;color:#76829a}
+  .topbar-right{display:none}
+  .sidebar .side-nav{width:100%;margin:0;display:flex;align-items:stretch;justify-content:space-around;gap:2px}
+  .sidebar .nav-link{height:58px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:4px 2px;font-size:9px!important;line-height:1.2;border-radius:8px}
+  .sidebar .nav-icon{width:auto;font-size:18px;line-height:1.1}
+  .main-area{margin-left:0;margin-bottom:68px;min-width:0}
+  .page-content{min-width:0;padding:22px 13px 30px}
+  .topbar{padding:0 14px}
+  .page-heading{flex-wrap:wrap;align-items:center}
+  .page-heading>.button{flex:none}
+  .heading-actions{display:flex;gap:7px;flex-wrap:wrap}
+  .heading-actions .button{padding:0 10px;font-size:10px}
+  .filter-bar{align-items:stretch}
+  .filter-bar .clear-link{padding-top:10px}
+  .table-card{max-width:100%}
+  .table-scroll{overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+  .form-actions{flex-wrap:wrap}
+}
+@media(max-width:430px){
+  .page-heading{gap:10px}
+  .page-heading>div:first-child{width:100%}
+  .page-heading>.button{width:100%}
+  .heading-actions{width:100%}
+  .heading-actions .button{flex:1}
+  .input-row{grid-template-columns:1fr}
+  .filter-bar label{min-width:100%}
+  .row-actions{gap:3px}
+  .icon-button{min-width:34px;min-height:36px}
+}
+.row-actions{text-align:right;white-space:nowrap}.row-actions form{display:inline-block;vertical-align:middle}
+.icon-button.edit{width:28px;height:28px;display:inline-grid;place-items:center;border-radius:5px;color:#6273dd;font-size:14px}
+.icon-button.edit:hover{background:#eef0ff;color:#4055d3}

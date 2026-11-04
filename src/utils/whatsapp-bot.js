@@ -20,11 +20,11 @@ function parseTransactionMessage(text) {
 }
 
 function baseHelpMessage() {
-  return '*Perintah bot MyKas*\n\n• `!masuk 5000.000 Gaji` — catat pemasukan\n• `!keluar 25000 Makan siang` — catat pengeluaran\n• `!saldo` — ringkasan bulan ini\n• `!laporan mingguan` — laporan minggu ini\n• `!laporan bulanan` — laporan bulan ini\n• `!dashboard` — tautan dashboard web\n\nNominal boleh memakai titik pemisah ribuan. Contoh: `!masuk 1.500.000 Freelance`.';
+  return '*Perintah bot MyKas*\n\n!masuk 5000 Gaji / !pemasukan 5000 Gaji - catat pemasukan\n!keluar 25000 Makan / !pengeluaran 25000 Makan - catat pengeluaran\n!hapus MK-000123 - minta hapus transaksi; perlu konfirmasi\n!konfirmasi hapus / !batal hapus - konfirmasi atau batalkan (5 menit)\n!terhapus - lihat maksimal 10 transaksi yang dihapus\n!restore MK-000123 / !pulihkan MK-000123 - pulihkan transaksi\n!saldo - ringkasan bulan ini\n!laporan - laporan bulan ini\n!laporan bulanan / !laporan monthly - laporan bulan ini\n!laporan mingguan / !laporan weekly - laporan minggu ini\n!dashboard - tautan dashboard web\n!help / !bantuan / !menu - daftar perintah\n\nGunakan titik/koma sebagai pemisah ribuan, contoh: !masuk 1.500.000 Freelance.';
 }
 
 function helpMessage() {
-  return `${baseHelpMessage()}\n\nHapus transaksi: !hapus MK-000123, lalu konfirmasi dengan !konfirmasi hapus dalam 5 menit. Untuk batal, ketik !batal hapus.`;
+  return baseHelpMessage();
 }
 
 function welcomeMessage(name) {
@@ -36,9 +36,9 @@ async function buildBotReply(text, phone) {
   const [users] = await pool.execute('SELECT id FROM users WHERE whatsapp_number=? AND is_verified=1 LIMIT 1', [phone]);
   if (!users.length) return '';
 
-  const reportMatch = command.match(/^laporan(?:\s+(mingguan|mmingguan|bulanan|weekly|monthly))?$/);
+  const reportMatch = command.match(/^laporan(?:\s+(mingguan|bulanan|weekly|monthly))?$/);
   if (command === 'saldo' || reportMatch) {
-    const weekly = reportMatch && ['mingguan', 'mmingguan', 'weekly'].includes(reportMatch[1]);
+    const weekly = reportMatch && ['mingguan', 'weekly'].includes(reportMatch[1]);
     const label = weekly ? 'Minggu ini' : 'Bulan ini';
     const periodSql = weekly
       ? 'happened_on>=DATE_SUB(CURDATE(),INTERVAL WEEKDAY(CURDATE()) DAY) AND happened_on<=CURDATE()'

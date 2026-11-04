@@ -11,6 +11,11 @@ function log(stage, details = {}) {
   console.info(JSON.stringify({ component: 'whatsapp-webhook', stage, ...details }));
 }
 
+function parseTransactionId(reference) {
+  const digits = String(reference).replace(/^MK-(?:\d{8}-)?/i, '');
+  return digits.replace(/^0+(?=\d)/, '');
+}
+
 async function evolution(req, res) {
   const eventName = req.params.event || req.body?.event || 'unspecified';
   log('received', { event: eventName });
@@ -53,8 +58,7 @@ async function evolution(req, res) {
     const normalizedCommand = String(text).trim().toLowerCase().replace(/^!/, '');
     let deleteReply = '';
     if (deleteMatch) {
-      const digits = deleteMatch[1].replace(/^MK-(?:\d{8}-)?/i, '');
-      const transactionId = digits.replace(/^0+(?=\d)/, '');
+      const transactionId = parseTransactionId(deleteMatch[1]);
       const [matches] = await connection.execute('SELECT id,kind,amount,category,happened_on FROM transactions WHERE id=? AND user_id=? AND deleted_at IS NULL LIMIT 1', [transactionId, user.id]);
       if (!matches.length) deleteReply = 'Transaksi tidak ditemukan atau sudah dihapus. Periksa ID di riwayat Anda.';
       else {
@@ -79,6 +83,26 @@ async function evolution(req, res) {
         await connection.execute('DELETE FROM pending_transaction_deletions WHERE user_id=?', [user.id]);
         deleteReply = result.affectedRows ? 'Transaksi dihapus dari riwayat aktif. Data tersimpan sebagai soft delete.' : 'Transaksi tidak ditemukan atau sudah dihapus.';
       }
+      await connection.commit();
+      try { await sendWhatsApp(phone, deleteReply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
+      return res.json({ status: 'replied' });
+    }
+    const restoreMatch = String(text).trim().match(/^!?(?:restore|pulihkan)\s+(MK-(?:\d{8}-)?\d+|\d+)$/i);
+    if (restoreMatch) {
+      const transactionId = parseTransactionId(restoreMatch[1]);
+      const [result] = await connection.execute('UPDATE transactions SET deleted_at=NULL WHERE id=? AND user_id=? AND deleted_at IS NOT NULL', [transactionId, user.id]);
+      deleteReply = result.affectedRows
+        ? `Transaksi *${formatTransactionReference(transactionId)}* berhasil dipulihkan dan kembali masuk ke laporan.`
+        : 'Transaksi terhapus tidak ditemukan pada akun Anda.';
+      await connection.commit();
+      try { await sendWhatsApp(phone, deleteReply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
+      return res.json({ status: 'replied' });
+    }
+    if (['terhapus', 'daftar terhapus'].includes(normalizedCommand)) {
+      const [deletedRows] = await connection.execute('SELECT id,kind,amount,category,deleted_at FROM transactions WHERE user_id=? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC,id DESC LIMIT 10', [user.id]);
+      deleteReply = deletedRows.length
+        ? `*Transaksi terhapus*\n${deletedRows.map(tx => `• ${formatTransactionReference(tx.id)} — ${tx.kind === 'income' ? 'pemasukan' : 'pengeluaran'} ${formatMoney(tx.amount)}, ${tx.category}`).join('\n')}\n\nPulihkan dengan !restore MK-000123.`
+        : 'Tidak ada transaksi terhapus yang bisa dipulihkan.';
       await connection.commit();
       try { await sendWhatsApp(phone, deleteReply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
       return res.json({ status: 'replied' });

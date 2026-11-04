@@ -38,7 +38,7 @@ Untuk mengaktifkan panel admin, isi `ADMIN_EMAIL` di `.env` dengan email admin. 
 - Dashboard bulanan, transaksi pemasukan/pengeluaran, filter riwayat, soft delete transaksi, dan laporan periode/kategori.
 - Detail transaksi dengan tanggal, sumber, catatan, serta ID nomor urut seperti `MK-000123`.
 - Setelah OTP benar, dashboard menampilkan ucapan bahwa pendaftaran berhasil dan akun telah aktif.
-- Bot WhatsApp menerima `!help`, `!masuk 5.000.000 Gaji`, `!keluar 25.000 Makan siang`, `!hapus MK-000123` (diikuti `!konfirmasi hapus` atau `!batal hapus` dalam 5 menit), `!saldo`, `!laporan mingguan`, `!laporan bulanan`, dan `!dashboard`. Balasan transaksi mengonfirmasi kategori dan nominal; laporan menyertakan total serta kategori teratas.
+- Transaksi bisa diedit dari halaman detail atau daftar. Bot WhatsApp menerima `!help`/`!bantuan`/`!menu`, `!masuk`/`!pemasukan`, `!keluar`/`!pengeluaran`, `!hapus MK-000123` (lalu `!konfirmasi hapus` atau `!batal hapus` dalam 5 menit), `!terhapus`, `!restore MK-000123`/`!pulihkan MK-000123`, `!saldo`, `!laporan`, `!laporan mingguan`/`!laporan weekly`, `!laporan bulanan`/`!laporan monthly`, dan `!dashboard`.
 - Webhook memerlukan header `x-webhook-secret` atau parameter URL `?secret=...` yang nilainya sama dengan `EVOLUTION_WEBHOOK_SECRET`. Konfigurasikan event pesan masuk pada Evolution API dan arahkan ke endpoint tersebut.
 
 Webhook mengenali format payload pesan Evolution API `data.key.remoteJid` dan `data.message`. Nominal titik atau koma diperlakukan sebagai pemisah ribuan. Pastikan instance Evolution dapat menjangkau host aplikasi; untuk deployment publik gunakan URL HTTPS.

@@ -10,22 +10,35 @@ async function dashboard(req, res) {
   });
 }
 
-function addPage(req, res) { return res.render('transaction-form', { title: 'Tambah transaksi' }); }
+function addPage(req, res) { return res.render('transaction-form', { title: 'Tambah transaksi', transaction: null, editing: false }); }
+
+async function editPage(req, res) {
+  const transaction = await Transaction.findById(req.session.user.id, req.params.id);
+  if (!transaction) return res.status(404).render('error', { title: 'Transaksi tidak ditemukan', message: 'Transaksi ini tidak ditemukan di akun Anda.' });
+  return res.render('transaction-form', { title: 'Edit transaksi', transaction, editing: true });
+}
 
 async function create(req, res) {
-  const { kind, category } = req.body;
-  const note = String(req.body.note || '').trim();
-  const amount = Number(String(req.body.amount || '').replace(/,/g, ''));
-  const happenedOn = String(req.body.happened_on || '');
-  if (!['income', 'expense'].includes(kind) || !Number.isSafeInteger(amount) || amount <= 0 || amount > 99999999999999
-    || !category || category.trim().length > 80 || note.length > 240
-    || !/^\d{4}-\d{2}-\d{2}$/.test(happenedOn) || Number.isNaN(Date.parse(`${happenedOn}T00:00:00Z`))) {
+  const values = parseTransaction(req.body);
+  if (!values) {
     req.flash('danger', 'Periksa kembali jenis, nominal, kategori, catatan, dan tanggal transaksi.');
     return res.redirect('/transaksi/tambah');
   }
-  const id = await Transaction.create({ userId: req.session.user.id, kind, amount, category: category.trim(), note, happenedOn });
+  const id = await Transaction.create({ userId: req.session.user.id, ...values });
   req.flash('success', `Transaksi berhasil dicatat dengan ID ${formatTransactionReference(id)}.`);
   return res.redirect('/transaksi');
+}
+
+async function update(req, res) {
+  const values = parseTransaction(req.body);
+  if (!values) {
+    req.flash('danger', 'Periksa kembali jenis, nominal, kategori, catatan, dan tanggal transaksi.');
+    return res.redirect(`/transaksi/${encodeURIComponent(req.params.id)}/edit`);
+  }
+  const updated = await Transaction.update(req.session.user.id, req.params.id, values);
+  if (!updated) return res.status(404).render('error', { title: 'Transaksi tidak ditemukan', message: 'Transaksi ini tidak ditemukan di akun Anda.' });
+  req.flash('success', 'Perubahan transaksi berhasil disimpan.');
+  return res.redirect(`/transaksi/${encodeURIComponent(req.params.id)}`);
 }
 
 async function detail(req, res) {
@@ -52,4 +65,16 @@ function validDate(value) {
     && !Number.isNaN(Date.parse(`${value}T00:00:00Z`)) ? value : '';
 }
 
-module.exports = { addPage, create, dashboard, detail, list, remove };
+function parseTransaction(body) {
+  const kind = body.kind;
+  const category = typeof body.category === 'string' ? body.category.trim() : '';
+  const note = String(body.note || '').trim();
+  const amount = Number(String(body.amount || '').replace(/,/g, ''));
+  const happenedOn = String(body.happened_on || '');
+  if (!['income', 'expense'].includes(kind) || !Number.isSafeInteger(amount) || amount <= 0 || amount > 99999999999999
+    || !category || category.length > 80 || note.length > 240
+    || !/^\d{4}-\d{2}-\d{2}$/.test(happenedOn) || Number.isNaN(Date.parse(`${happenedOn}T00:00:00Z`))) return null;
+  return { kind, amount, category, note, happenedOn };
+}
+
+module.exports = { addPage, create, dashboard, detail, editPage, list, remove, update };
