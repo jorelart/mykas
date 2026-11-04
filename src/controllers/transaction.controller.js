@@ -3,11 +3,12 @@ const Wallet = require('../models/wallet.model');
 const { formatTransactionReference } = require('../utils/transaction-reference');
 
 async function dashboard(req, res) {
-  const data = await Transaction.dashboard(req.session.user.id);
+  const activeWallet = await Wallet.activeForUser(req.session.user.id);
+  const data = await Transaction.dashboard(req.session.user.id, activeWallet?.id || null);
   res.render('dashboard', {
     title: 'Dashboard', income: data.summary.income, expense: data.summary.expense,
     balance: Number(data.summary.income) - Number(data.summary.expense),
-    monthCount: data.summary.count, count: data.total, recent: data.recent,
+    monthCount: data.summary.count, count: data.total, recent: data.recent, activeWallet,
   });
 }
 
@@ -20,12 +21,17 @@ async function editPage(req, res) {
 }
 
 async function create(req, res) {
+  const activeWallet = await Wallet.activeForUser(req.session.user.id);
+  if (!activeWallet) {
+    req.flash('warning', 'Pilih atau buat dompet aktif sebelum mencatat transaksi.');
+    return res.redirect('/dompet');
+  }
   const values = parseTransaction(req.body);
   if (!values) {
     req.flash('danger', 'Periksa kembali jenis, nominal, kategori, catatan, dan tanggal transaksi.');
     return res.redirect('/transaksi/tambah');
   }
-  const id = await Transaction.create({ userId: req.session.user.id, ...values });
+  const id = await Transaction.create({ userId: req.session.user.id, walletId: activeWallet.id, ...values });
   req.flash('success', `Transaksi berhasil dicatat dengan ID ${formatTransactionReference(id)}.`);
   return res.redirect('/transaksi');
 }
@@ -54,22 +60,6 @@ async function list(req, res) {
   const rows = await Transaction.list(req.session.user.id, { kind, start, end });
   const wallets = await Wallet.list(null, req.session.user.id);
   res.render('transactions', { title: 'Transaksi', rows, wallets, kind, start: start || '', end: end || '' });
-}
-
-async function createWallet(req, res) {
-  const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
-  if (!name || name.length > 60) {
-    req.flash('danger', 'Nama dompet wajib diisi dan maksimal 60 karakter.');
-    return res.redirect('/transaksi');
-  }
-  try {
-    await Wallet.createForUser(req.session.user.id, name);
-    req.flash('success', `Dompet “${name}” berhasil dibuat.`);
-  } catch (error) {
-    if (error.code !== 'ER_DUP_ENTRY') throw error;
-    req.flash('warning', `Dompet “${name}” sudah ada.`);
-  }
-  return res.redirect('/transaksi');
 }
 
 async function assignWallet(req, res) {
@@ -106,4 +96,4 @@ function parseTransaction(body) {
   return { kind, amount, category, note, happenedOn };
 }
 
-module.exports = { addPage, assignWallet, create, createWallet, dashboard, detail, editPage, list, remove, update };
+module.exports = { addPage, assignWallet, create, dashboard, detail, editPage, list, remove, update };

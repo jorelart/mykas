@@ -55,14 +55,14 @@ async function evolution(req, res) {
       await connection.commit(); log('ignored', { reason: 'sender_not_verified', event: eventName });
       return res.json({ status: 'unmatched_sender' });
     }
-    const walletCommand = String(text).trim().match(/^\/?(?:dompet\s+(create|list|delete)|wallets)(?:\s+(.+))?$/i);
-    const selectMatch = String(text).trim().match(/^\/?select\s+(.+)$/i);
+    const walletCommand = String(text).trim().match(/^\/(?:dompet(?:\s+(create|list|delete))?|wallets)(?:\s+(.+))?$/i);
+    const selectMatch = String(text).trim().match(/^\/select\s+(.+)$/i);
     if (walletCommand || selectMatch) {
       let reply;
       if (selectMatch) {
         const name = selectMatch[1].trim().slice(0, 60);
         const [rows] = await connection.execute('SELECT id,name,balance FROM wallets WHERE user_id=? AND name=? LIMIT 1', [user.id, name]);
-        if (!rows.length) reply = `Dompet *${name}* tidak ditemukan. Ketik *dompet list* untuk melihat dompet Anda.`;
+        if (!rows.length) reply = `Dompet *${name}* tidak ditemukan. Ketik */dompet* untuk melihat dompet Anda.`;
         else {
           await Wallet.select(connection, phone, rows[0].id);
           reply = `âœ… Dompet aktif dipilih: *${rows[0].name}* (${formatMoney(rows[0].balance)}). Transaksi berikutnya akan masuk ke dompet ini.`;
@@ -71,7 +71,7 @@ async function evolution(req, res) {
         const action = walletCommand[1] ? walletCommand[1].toLowerCase() : 'list';
         const name = (walletCommand[2] || '').trim();
         if (action === 'create') {
-          if (!name || name.length > 60) reply = 'Format: *dompet create [nama]* (maksimal 60 karakter).';
+          if (!name || name.length > 60) reply = 'Format: */dompet create [nama]* (maksimal 60 karakter).';
           else {
             try {
               const id = await Wallet.create(connection, phone, user.id, name);
@@ -101,16 +101,16 @@ async function evolution(req, res) {
           const wallets = await Wallet.list(connection, user.id);
           const active = await Wallet.active(connection, phone, user.id);
           reply = wallets.length
-            ? `*Dompet Anda*${active ? `\nAktif: ðŸ  *${active.name}*` : ''}\n${wallets.map(w => `${active?.id === w.id ? 'ðŸ‘‰' : 'â€¢'} ${w.name}: ${formatMoney(w.balance)}`).join('\n')}\n\nPilih dompet: */select [nama]*`
-            : 'Anda belum memiliki dompet. Buat dengan *dompet create [nama]*.';
+            ? `*Dompet Anda*${active ? `\nAktif: *${active.name}*` : ''}\n${wallets.map(w => `${active?.id === w.id ? '[AKTIF]' : '-'} ${w.name}: ${formatMoney(w.balance)}`).join('\n')}\n\nPilih dompet: */select [nama]*`
+            : 'Anda belum memiliki dompet. Buat dengan */dompet create [nama]*.';
         }
       }
       await connection.commit();
       try { await sendWhatsApp(phone, reply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
       return res.json({ status: 'replied' });
     }
-    const deleteMatch = String(text).trim().match(/^!?hapus\s+(MK-(?:\d{8}-)?\d+|\d+)$/i);
-    const normalizedCommand = String(text).trim().toLowerCase().replace(/^!/, '');
+    const deleteMatch = String(text).trim().match(/^\/hapus\s+(MK-(?:\d{8}-)?\d+|\d+)$/i);
+    const normalizedCommand = String(text).trim().toLowerCase().replace(/^\//, '');
     let deleteReply = '';
     if (deleteMatch) {
       const transactionId = parseTransactionId(deleteMatch[1]);
@@ -119,7 +119,7 @@ async function evolution(req, res) {
       else {
         await connection.execute('INSERT INTO pending_transaction_deletions (user_id,transaction_id,expires_at) VALUES (?,?,DATE_ADD(NOW(),INTERVAL 5 MINUTE)) ON DUPLICATE KEY UPDATE transaction_id=VALUES(transaction_id),expires_at=VALUES(expires_at)', [user.id, transactionId]);
         const tx = matches[0];
-        deleteReply = `âš ï¸ Anda akan menghapus transaksi *${formatTransactionReference(tx.id)}* (${tx.kind === 'income' ? 'pemasukan' : 'pengeluaran'} ${formatMoney(tx.amount)}, ${tx.category}, ${new Date(tx.happened_on).toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta'})}).\nData akan disembunyikan dari laporan.\nBalas *!konfirmasi hapus* dalam 5 menit untuk melanjutkan, atau *!batal hapus* untuk membatalkan.`;
+        deleteReply = `âš ï¸ Anda akan menghapus transaksi *${formatTransactionReference(tx.id)}* (${tx.kind === 'income' ? 'pemasukan' : 'pengeluaran'} ${formatMoney(tx.amount)}, ${tx.category}, ${new Date(tx.happened_on).toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta'})}).\nData akan disembunyikan dari laporan.\nBalas */konfirmasi hapus* dalam 5 menit untuk melanjutkan, atau */batal hapus* untuk membatalkan.`;
       }
       await connection.commit();
       try { await sendWhatsApp(phone, deleteReply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
@@ -132,7 +132,7 @@ async function evolution(req, res) {
         deleteReply = pending.length ? 'Permintaan hapus dibatalkan.' : 'Tidak ada permintaan hapus yang masih aktif.';
       } else if (!pending.length) {
         await connection.execute('DELETE FROM pending_transaction_deletions WHERE user_id=?', [user.id]);
-        deleteReply = 'Tidak ada permintaan hapus yang aktif. Buat permintaan baru dengan *!hapus MK-000123*.';
+        deleteReply = 'Tidak ada permintaan hapus yang aktif. Buat permintaan baru dengan */hapus MK-000123*.';
       } else {
         const [result] = await connection.execute('UPDATE transactions SET deleted_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=? AND deleted_at IS NULL', [pending[0].transaction_id, user.id]);
         await connection.execute('DELETE FROM pending_transaction_deletions WHERE user_id=?', [user.id]);
@@ -142,7 +142,7 @@ async function evolution(req, res) {
       try { await sendWhatsApp(phone, deleteReply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
       return res.json({ status: 'replied' });
     }
-    const restoreMatch = String(text).trim().match(/^!?(?:restore|pulihkan)\s+(MK-(?:\d{8}-)?\d+|\d+)$/i);
+    const restoreMatch = String(text).trim().match(/^\/restore\s+(MK-(?:\d{8}-)?\d+|\d+)$/i);
     if (restoreMatch) {
       const transactionId = parseTransactionId(restoreMatch[1]);
       const [result] = await connection.execute('UPDATE transactions SET deleted_at=NULL WHERE id=? AND user_id=? AND wallet_id IS NULL AND deleted_at IS NOT NULL', [transactionId, user.id]);
@@ -153,10 +153,10 @@ async function evolution(req, res) {
       try { await sendWhatsApp(phone, deleteReply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
       return res.json({ status: 'replied' });
     }
-    if (['terhapus', 'daftar terhapus'].includes(normalizedCommand)) {
+    if (normalizedCommand === 'terhapus') {
       const [deletedRows] = await connection.execute('SELECT id,kind,amount,category,deleted_at FROM transactions WHERE user_id=? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC,id DESC LIMIT 10', [user.id]);
       deleteReply = deletedRows.length
-        ? `*Transaksi terhapus*\n${deletedRows.map(tx => `â€¢ ${formatTransactionReference(tx.id)} â€” ${tx.kind === 'income' ? 'pemasukan' : 'pengeluaran'} ${formatMoney(tx.amount)}, ${tx.category}`).join('\n')}\n\nPulihkan dengan !restore MK-000123.`
+        ? `*Transaksi terhapus*\n${deletedRows.map(tx => `â€¢ ${formatTransactionReference(tx.id)} â€” ${tx.kind === 'income' ? 'pemasukan' : 'pengeluaran'} ${formatMoney(tx.amount)}, ${tx.category}`).join('\n')}\n\nPulihkan dengan /restore MK-000123.`
         : 'Tidak ada transaksi terhapus yang bisa dipulihkan.';
       await connection.commit();
       try { await sendWhatsApp(phone, deleteReply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
@@ -176,7 +176,7 @@ async function evolution(req, res) {
       const wallets = await Wallet.list(connection, user.id);
       await connection.commit();
       const names = wallets.length ? wallets.map(wallet => wallet.name).join(', ') : 'belum ada dompet';
-      try { await sendWhatsApp(phone, `Pilih dompet aktif terlebih dahulu dengan */select [nama_dompet]*. Dompet tersedia: ${names}. Jika belum ada, buat dengan *dompet create [nama]*.`); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
+      try { await sendWhatsApp(phone, `Pilih dompet aktif terlebih dahulu dengan */select [nama_dompet]*. Dompet tersedia: ${names}. Jika belum ada, buat dengan */dompet create [nama]*.`); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
       return res.json({ status: 'replied' });
     }
     const [lockedWallets] = await connection.execute('SELECT id,name,balance FROM wallets WHERE id=? AND user_id=? FOR UPDATE', [activeWallet.id, user.id]);

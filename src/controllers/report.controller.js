@@ -1,4 +1,5 @@
 const Transaction = require('../models/transaction.model');
+const Wallet = require('../models/wallet.model');
 
 async function index(req, res) {
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
@@ -8,8 +9,9 @@ async function index(req, res) {
     req.flash('warning', 'Rentang tanggal tidak valid.');
     return res.redirect('/laporan');
   }
-  const report = await Transaction.report(req.session.user.id, start, end);
-  return res.render('reports', { title: 'Laporan', ...report, start, end });
+  const activeWallet = await Wallet.activeForUser(req.session.user.id);
+  const report = await Transaction.report(req.session.user.id, start, end, activeWallet?.id || null);
+  return res.render('reports', { title: 'Laporan', ...report, start, end, activeWallet });
 }
 
 function validDate(value) {
