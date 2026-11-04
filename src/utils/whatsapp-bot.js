@@ -28,7 +28,7 @@ function helpMessage() {
 }
 
 function welcomeMessage(name) {
-  return `ðŸŽ‰ Selamat datang di MyKas, ${name}!\nAkun WhatsApp Anda berhasil diaktifkan. Anda bisa mencatat transaksi dan melihat ringkasan langsung melalui chat.\n\n${helpMessage()}`;
+  return `🎉 Selamat datang di MyKas, ${name}!\nAkun WhatsApp Anda berhasil diaktifkan. Anda bisa mencatat transaksi dan melihat ringkasan langsung melalui chat.\n\n${helpMessage()}`;
 }
 
 async function buildBotReply(text, phone) {
@@ -50,9 +50,9 @@ async function buildBotReply(text, phone) {
     const [[totals]] = await pool.execute(`SELECT COALESCE(SUM(CASE WHEN kind='income' THEN amount ELSE 0 END),0) income,
       COALESCE(SUM(CASE WHEN kind='expense' THEN amount ELSE 0 END),0) expense FROM transactions WHERE user_id=? AND wallet_id=? AND deleted_at IS NULL AND ${periodSql}`, [users[0].id, wallet.id]);
     const [categories] = await pool.execute(`SELECT category,kind,SUM(amount) total FROM transactions WHERE user_id=? AND wallet_id=? AND deleted_at IS NULL AND ${periodSql} GROUP BY category,kind ORDER BY total DESC LIMIT 4`, [users[0].id, wallet.id]);
-    const details = categories.length ? `\n\n*Kategori teratas*\n${categories.map(row => `â€¢ ${row.category} (${row.kind === 'income' ? 'masuk' : 'keluar'}): ${formatMoney(row.total)}`).join('\n')}` : '';
+    const details = categories.length ? `\n\n*Kategori teratas*\n${categories.map(row => `• ${row.category} (${row.kind === 'income' ? 'masuk' : 'keluar'}): ${formatMoney(row.total)}`).join('\n')}` : '';
     const dashboard = process.env.PUBLIC_URL ? `\n\nDashboard: ${process.env.PUBLIC_URL.replace(/\/$/, '')}` : '';
-    return `ðŸ“Š *Laporan ${label} · ${wallet.name}*\nPemasukan: ${formatMoney(totals.income)}\nPengeluaran: ${formatMoney(totals.expense)}\nSaldo bersih: ${formatMoney(Number(totals.income) - Number(totals.expense))}${details}${dashboard}`;
+    return `📊 *Laporan ${label} · ${wallet.name}*\nPemasukan: ${formatMoney(totals.income)}\nPengeluaran: ${formatMoney(totals.expense)}\nSaldo bersih: ${formatMoney(Number(totals.income) - Number(totals.expense))}${details}${dashboard}`;
   }
   if (command === 'dashboard') return process.env.PUBLIC_URL
     ? `Buka dashboard MyKas: ${process.env.PUBLIC_URL.replace(/\/$/, '')}`

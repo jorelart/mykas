@@ -65,7 +65,7 @@ async function evolution(req, res) {
         if (!rows.length) reply = `Dompet *${name}* tidak ditemukan. Ketik */dompet* untuk melihat dompet Anda.`;
         else {
           await Wallet.select(connection, phone, rows[0].id);
-          reply = `âœ… Dompet aktif dipilih: *${rows[0].name}* (${formatMoney(rows[0].balance)}). Transaksi berikutnya akan masuk ke dompet ini.`;
+          reply = `✅ Dompet aktif dipilih: *${rows[0].name}* (${formatMoney(rows[0].balance)}). Transaksi berikutnya akan masuk ke dompet ini.`;
         }
       } else {
         const action = walletCommand[1] ? walletCommand[1].toLowerCase() : 'list';
@@ -78,8 +78,8 @@ async function evolution(req, res) {
               const [countRows] = await connection.execute('SELECT COUNT(*) total FROM wallets WHERE user_id=?', [user.id]);
               if (Number(countRows[0].total) === 1) await Wallet.select(connection, phone, id);
               reply = Number(countRows[0].total) === 1
-                ? `âœ… Dompet *${name}* dibuat dan dipilih sebagai dompet aktif. Saldo: ${formatMoney(0)}.`
-                : `âœ… Dompet *${name}* berhasil dibuat. Pilih dengan */select ${name}*.`;
+                ? `✅ Dompet *${name}* dibuat dan dipilih sebagai dompet aktif. Saldo: ${formatMoney(0)}.`
+                : `✅ Dompet *${name}* berhasil dibuat. Pilih dengan */select ${name}*.`;
             } catch (error) {
               if (error.code !== 'ER_DUP_ENTRY') throw error;
               reply = `Dompet *${name}* sudah ada.`;
@@ -94,14 +94,14 @@ async function evolution(req, res) {
             else if (Number(txRows[0].total) > 0) reply = 'Dompet ini masih memiliki riwayat transaksi sehingga tidak dapat dihapus.';
             else {
               await connection.execute('DELETE FROM wallets WHERE id=?', [rows[0].id]);
-              reply = `âœ… Dompet *${name}* berhasil dihapus.`;
+              reply = `✅ Dompet *${name}* berhasil dihapus.`;
             }
           }
         } else {
           const wallets = await Wallet.list(connection, user.id);
           const active = await Wallet.active(connection, phone, user.id);
           reply = wallets.length
-            ? `*Dompet Anda*${active ? `\nAktif: *${active.name}*` : ''}\n${wallets.map(w => `${active?.id === w.id ? '[AKTIF]' : '-'} ${w.name}: ${formatMoney(w.balance)}`).join('\n')}\n\nPilih dompet: */select [nama]*`
+            ? `*Dompet Anda*${active ? `\nAktif: *${active.name}*` : ''}\n${wallets.map(w => `${active?.id === w.id ? '✓ AKTIF' : '-'} ${w.name}: ${formatMoney(w.balance)}`).join('\n')}\n\nPilih dompet: */select [nama]*`
             : 'Anda belum memiliki dompet. Buat dengan */dompet create [nama]*.';
         }
       }
@@ -119,7 +119,7 @@ async function evolution(req, res) {
       else {
         await connection.execute('INSERT INTO pending_transaction_deletions (user_id,transaction_id,expires_at) VALUES (?,?,DATE_ADD(NOW(),INTERVAL 5 MINUTE)) ON DUPLICATE KEY UPDATE transaction_id=VALUES(transaction_id),expires_at=VALUES(expires_at)', [user.id, transactionId]);
         const tx = matches[0];
-        deleteReply = `âš ï¸ Anda akan menghapus transaksi *${formatTransactionReference(tx.id)}* (${tx.kind === 'income' ? 'pemasukan' : 'pengeluaran'} ${formatMoney(tx.amount)}, ${tx.category}, ${new Date(tx.happened_on).toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta'})}).\nData akan disembunyikan dari laporan.\nBalas */konfirmasi hapus* dalam 5 menit untuk melanjutkan, atau */batal hapus* untuk membatalkan.`;
+        deleteReply = `⚠️ Anda akan menghapus transaksi *${formatTransactionReference(tx.id)}* (${tx.kind === 'income' ? 'pemasukan' : 'pengeluaran'} ${formatMoney(tx.amount)}, ${tx.category}, ${new Date(tx.happened_on).toLocaleDateString('id-ID',{timeZone:'Asia/Jakarta'})}).\nData akan disembunyikan dari laporan.\nBalas */konfirmasi hapus* dalam 5 menit untuk melanjutkan, atau */batal hapus* untuk membatalkan.`;
       }
       await connection.commit();
       try { await sendWhatsApp(phone, deleteReply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
@@ -156,7 +156,7 @@ async function evolution(req, res) {
     if (normalizedCommand === 'terhapus') {
       const [deletedRows] = await connection.execute('SELECT id,kind,amount,category,deleted_at FROM transactions WHERE user_id=? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC,id DESC LIMIT 10', [user.id]);
       deleteReply = deletedRows.length
-        ? `*Transaksi terhapus*\n${deletedRows.map(tx => `â€¢ ${formatTransactionReference(tx.id)} â€” ${tx.kind === 'income' ? 'pemasukan' : 'pengeluaran'} ${formatMoney(tx.amount)}, ${tx.category}`).join('\n')}\n\nPulihkan dengan /restore MK-000123.`
+        ? `*Transaksi terhapus*\n${deletedRows.map(tx => `• ${formatTransactionReference(tx.id)} — ${tx.kind === 'income' ? 'pemasukan' : 'pengeluaran'} ${formatMoney(tx.amount)}, ${tx.category}`).join('\n')}\n\nPulihkan dengan /restore MK-000123.`
         : 'Tidak ada transaksi terhapus yang bisa dipulihkan.';
       await connection.commit();
       try { await sendWhatsApp(phone, deleteReply); } catch (error) { console.error(JSON.stringify({ component: 'whatsapp-webhook', stage: 'send_failed', message: error.message })); }
