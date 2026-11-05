@@ -12,5 +12,19 @@ document.addEventListener('submit', async (event) => {
     HTMLFormElement.prototype.submit.call(form);
   }
 });
+document.addEventListener('submit', async (event) => {
+  const form = event.target.closest('.suspend-confirm-form');
+  if (!form || form.dataset.confirmed === 'true') return;
+  event.preventDefault();
+  const name = form.dataset.userName || 'Pengguna ini';
+  const warning = `${name} tidak akan bisa masuk atau menggunakan bot WhatsApp sampai akunnya diaktifkan kembali.`;
+  const result = window.Swal
+    ? await Swal.fire({ title: 'Suspend akun ini?', text: warning, icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya, suspend akun', cancelButtonText: 'Batal', confirmButtonColor: '#d97706', reverseButtons: true, focusCancel: true })
+    : { isConfirmed: window.confirm(`${warning} Lanjutkan?`) };
+  if (result.isConfirmed) {
+    form.dataset.confirmed = 'true';
+    HTMLFormElement.prototype.submit.call(form);
+  }
+});
 document.querySelector(".theme-toggle")?.addEventListener("click",()=>{const dark=document.documentElement.classList.toggle("dark");try{localStorage.setItem("mykas-theme",dark?"dark":"light")}catch(e){}});
 </script></body></html>
