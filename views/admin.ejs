@@ -1,6 +1,270 @@
 <%- include('partials/header') %>
-<div class="mx-auto max-w-7xl space-y-7 px-5 py-8 sm:px-8 lg:px-10"><section><p class="text-sm font-bold uppercase tracking-[.18em] text-indigo-600 dark:text-indigo-300">Panel administrator</p><h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">Ringkasan sistem</h1><p class="mt-2 text-base text-slate-600 dark:text-slate-300">Kelola akun dan pantau aktivitas keuangan MyKas.</p></section>
-<section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><% const stats = [{label:'Total pengguna',value:users.total,sub:'Semua akun terdaftar',color:'indigo'},{label:'Terverifikasi',value:users.verified,sub:'Aktivasi WhatsApp selesai',color:'emerald'},{label:'Ditangguhkan',value:users.suspended,sub:'Tidak dapat masuk',color:'amber'},{label:'Total transaksi',value:transactions.total,sub:'Semua akun',color:'violet'}]; stats.forEach(stat => { %><article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"><p class="text-sm font-semibold text-slate-600 dark:text-slate-300"><%= stat.label %></p><p class="mt-3 text-3xl font-bold tracking-tight text-slate-900 dark:text-white"><%= stat.value %></p><p class="mt-2 text-sm text-slate-500 dark:text-slate-400"><%= stat.sub %></p></article><% }) %></section>
-<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"><div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700"><h2 class="font-bold text-slate-900 dark:text-white">Manajemen pengguna</h2><p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Tangguhkan atau aktifkan akun, dan kirim instruksi reset kata sandi ke WhatsApp.</p></div><% if (recentUsers.length) { %><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-left dark:divide-slate-700"><thead class="bg-slate-50 dark:bg-slate-900/60"><tr><th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Pengguna</th><th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Status</th><th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Tanggal daftar</th><th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Aksi akun</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700"><% recentUsers.forEach(account => { const isCurrentAdmin = Number(account.id) === Number(user.id); %><tr class="align-top hover:bg-slate-50 dark:hover:bg-slate-700/30"><td class="px-5 py-4"><strong class="block text-sm font-bold text-slate-900 dark:text-white"><%= account.name %></strong><span class="mt-1 block text-sm text-slate-600 dark:text-slate-300"><%= account.email %></span></td><td class="whitespace-nowrap px-5 py-4"><% if (account.is_suspended) { %><span class="rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-200">Ditangguhkan</span><% } else if (account.is_verified) { %><span class="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-900 dark:bg-emerald-900/50 dark:text-emerald-200">Terverifikasi</span><% } else { %><span class="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 dark:bg-slate-700 dark:text-slate-200">Menunggu aktivasi</span><% } %></td><td class="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-700 dark:text-slate-200"><%= formatDate(account.created_at) %></td><td class="px-5 py-4"><div class="flex min-w-48 flex-col items-start gap-2"><form method="post" class="<%= account.is_suspended ? '' : 'suspend-confirm-form' %>" data-user-name="<%= account.name %>" action="/admin/users/<%= account.id %>/suspension"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><input type="hidden" name="suspended" value="<%= account.is_suspended ? '0' : '1' %>"><button class="rounded-lg border px-3 py-2 text-xs font-bold transition <%= account.is_suspended ? 'border-emerald-200 text-emerald-800 hover:bg-emerald-50 dark:border-emerald-900 dark:text-emerald-200 dark:hover:bg-emerald-950' : 'border-amber-200 text-amber-900 hover:bg-amber-50 dark:border-amber-900 dark:text-amber-200 dark:hover:bg-amber-950' %>" <%= isCurrentAdmin ? 'disabled title="Akun admin aktif tidak dapat ditangguhkan"' : '' %>><%= account.is_suspended ? 'Aktifkan akun' : 'Suspend akun' %></button></form><form method="post" action="/admin/users/<%= account.id %>/reset-password"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-700" <%= !account.is_verified ? 'disabled title="Akun belum terverifikasi"' : '' %>>Kirim reset password</button></form></div></td></tr><% }) %></tbody></table></div><% } else { %><div class="p-8 text-center text-sm text-slate-600 dark:text-slate-300">Belum ada akun pengguna.</div><% } %><div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-3 dark:border-slate-700"><p class="text-xs font-medium text-slate-500 dark:text-slate-400">Halaman <%= usersPage %> dari <%= usersPages %> · pengguna terbaru</p><nav class="flex gap-2" aria-label="Halaman pengguna"><% if (usersPage > 1) { %><a class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700" href="/admin?users_page=<%= usersPage - 1 %>">Sebelumnya</a><% } %><% if (usersPage < usersPages) { %><a class="rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700" href="/admin?users_page=<%= usersPage + 1 %>">Berikutnya</a><% } %></nav></div></section>
-<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"><div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700"><h2 class="font-bold text-slate-900 dark:text-white">Transaksi terbaru</h2><p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Aktivitas dari seluruh akun.</p></div><% if (recentTransactions.length) { %><div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-left dark:divide-slate-700"><thead class="bg-slate-50 dark:bg-slate-900/60"><tr><th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">ID</th><th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Pengguna</th><th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Kategori</th><th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Tanggal</th><th class="px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Jenis</th><th class="px-5 py-3 text-right text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Nominal</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700"><% recentTransactions.forEach(tx => { %><tr><td class="whitespace-nowrap px-5 py-4 text-sm font-bold text-indigo-700 dark:text-indigo-300"><%= formatTransactionReference(tx.id,tx.happened_on) %></td><td class="px-5 py-4"><strong class="block text-sm font-bold text-slate-900 dark:text-white"><%= tx.user_name %></strong><span class="text-sm text-slate-600 dark:text-slate-300"><%= tx.user_email %></span></td><td class="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-700 dark:text-slate-200"><%= tx.category %></td><td class="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-700 dark:text-slate-200"><%= formatDate(tx.happened_on) %></td><td class="whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200"><%= tx.kind === 'income' ? 'Pemasukan' : 'Pengeluaran' %></td><td class="whitespace-nowrap px-5 py-4 text-right text-sm font-bold <%= tx.kind === 'income' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' %>"><%= formatRupiah(tx.amount) %></td></tr><% }) %></tbody></table></div><% } else { %><div class="p-8 text-center text-sm text-slate-600 dark:text-slate-300">Belum ada transaksi.</div><% } %></section></div>
+
+<!--begin::Stats Widgets-->
+<div class="row g-5 g-xl-8 mb-7">
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-flush h-100 shadow-sm">
+      <div class="card-body d-flex flex-column justify-content-between p-6">
+        <div class="d-flex align-items-center mb-3">
+          <div class="symbol symbol-45px symbol-light-primary me-4">
+            <span class="symbol-label">
+              <span class="svg-icon svg-icon-2x svg-icon-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path opacity="0.3" d="M22 12C22 17.5 17.5 22 12 22C6.5 22 2 17.5 2 12C2 6.5 6.5 2 12 2C17.5 2 22 6.5 22 12ZM12 7C10.3 7 9 8.3 9 10C9 11.7 10.3 13 12 13C13.7 13 15 11.7 15 10C15 8.3 13.7 7 12 7Z" fill="currentColor"/>
+                  <path d="M12 22C14.6 22 17 21 18.7 19.4C17.9 16.9 15.2 15 12 15C8.8 15 6.09999 16.9 5.29999 19.4C6.99999 21 9.4 22 12 22Z" fill="currentColor"/>
+                </svg>
+              </span>
+            </span>
+          </div>
+          <div>
+            <div class="text-gray-400 fw-bold fs-7">Total Pengguna</div>
+            <div class="text-gray-900 fw-bolder fs-2hx lh-1"><%= users.total %></div>
+          </div>
+        </div>
+        <div class="text-muted fs-8">Semua akun terdaftar</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-flush h-100 shadow-sm">
+      <div class="card-body d-flex flex-column justify-content-between p-6">
+        <div class="d-flex align-items-center mb-3">
+          <div class="symbol symbol-45px symbol-light-success me-4">
+            <span class="symbol-label">
+              <span class="svg-icon svg-icon-2x svg-icon-success">
+                <path opacity="0.3" d="M10.8 16C10.6 16 10.4 15.9 10.3 15.7L7.3 12.7C7 12.4 7 11.9 7.3 11.6C7.6 11.3 8.1 11.3 8.4 11.6L10.8 14L15.6 9.2C15.9 8.9 16.4 8.9 16.7 9.2C17 9.5 17 10 16.7 10.3L11.3 15.7C11.2 15.9 11 16 10.8 16Z" fill="currentColor"/>
+                <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor"/>
+              </svg>
+            </span>
+          </div>
+          <div>
+            <div class="text-gray-400 fw-bold fs-7">Terverifikasi</div>
+            <div class="text-success fw-bolder fs-2hx lh-1"><%= users.verified %></div>
+          </div>
+        </div>
+        <div class="text-muted fs-8">Aktivasi WhatsApp selesai</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-flush h-100 shadow-sm">
+      <div class="card-body d-flex flex-column justify-content-between p-6">
+        <div class="d-flex align-items-center mb-3">
+          <div class="symbol symbol-45px symbol-light-warning me-4">
+            <span class="symbol-label">
+              <span class="svg-icon svg-icon-2x svg-icon-warning">
+                <rect opacity="0.3" x="2" y="2" width="20" height="20" rx="10" fill="currentColor"/>
+                <rect x="11" y="14" width="7" height="2" rx="1" transform="rotate(-90 11 14)" fill="currentColor"/>
+                <rect x="11" y="17" width="2" height="2" rx="1" transform="rotate(-90 11 17)" fill="currentColor"/>
+              </svg>
+            </span>
+          </div>
+          <div>
+            <div class="text-gray-400 fw-bold fs-7">Ditangguhkan</div>
+            <div class="text-warning fw-bolder fs-2hx lh-1"><%= users.suspended %></div>
+          </div>
+        </div>
+        <div class="text-muted fs-8">Akses masuk dibatasi</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="card card-flush h-100 shadow-sm">
+      <div class="card-body d-flex flex-column justify-content-between p-6">
+        <div class="d-flex align-items-center mb-3">
+          <div class="symbol symbol-45px symbol-light-primary me-4">
+            <span class="symbol-label">
+              <span class="svg-icon svg-icon-2x svg-icon-primary">
+                <path opacity="0.3" d="M14 3V21H10V3C10 2.4 10.4 2 11 2H13C13.6 2 14 2.4 14 3ZM7 14H5C4.4 14 4 14.4 4 15V21H8V15C8 14.4 7.6 14 7 14Z" fill="currentColor"/>
+                <path d="M21 20H20V8C20 7.4 19.6 7 19 7H17C16.4 7 16 7.4 16 8V20H3C2.4 20 2 20.4 2 21C2 21.6 2.4 22 3 22H21C21.6 22 22 21.6 22 21C22 20.4 21.6 20 21 20Z" fill="currentColor"/>
+              </svg>
+            </span>
+          </div>
+          <div>
+            <div class="text-gray-400 fw-bold fs-7">Total Transaksi</div>
+            <div class="text-gray-900 fw-bolder fs-2hx lh-1"><%= transactions.total %></div>
+          </div>
+        </div>
+        <div class="text-muted fs-8">Aktivitas seluruh akun</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--end::Stats Widgets-->
+
+<!--begin::Users Management Card-->
+<div class="card card-flush shadow-sm mb-7">
+  <div class="card-header align-items-center py-5">
+    <div class="card-title">
+      <div>
+        <h2 class="fs-4 fw-bolder text-gray-900 mb-0">Manajemen Pengguna</h2>
+        <span class="fs-7 text-muted fw-bold">Tangguhkan atau aktifkan akun pengguna, dan kirim instruksi reset kata sandi</span>
+      </div>
+    </div>
+    <div class="card-toolbar">
+      <span class="badge badge-light-primary fw-bolder fs-7 px-3 py-2">
+        Halaman <%= usersPage %> dari <%= usersPages %>
+      </span>
+    </div>
+  </div>
+
+  <div class="card-body pt-0">
+    <% if (recentUsers.length) { %>
+    <div class="table-responsive">
+      <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_admin_users_table">
+        <thead>
+          <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+            <th class="min-w-200px">Pengguna</th>
+            <th class="min-w-120px">Status</th>
+            <th class="min-w-140px">Tanggal Daftar</th>
+            <th class="text-end min-w-200px">Aksi Akun</th>
+          </tr>
+        </thead>
+        <tbody class="fw-bold text-gray-600">
+          <% recentUsers.forEach(account => { 
+            const isCurrentAdmin = Number(account.id) === Number(user.id);
+            const userInitial = String(account.name || 'U').trim().charAt(0).toUpperCase();
+          %>
+          <tr>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="symbol symbol-40px symbol-light-primary me-3">
+                  <span class="symbol-label fw-bolder fs-5 text-primary"><%= userInitial %></span>
+                </div>
+                <div class="d-flex flex-column">
+                  <span class="text-gray-900 fw-bolder fs-6"><%= account.name %></span>
+                  <span class="text-muted fw-bold fs-7"><%= account.email %></span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <% if (account.is_suspended) { %>
+              <span class="badge badge-light-danger fw-bolder fs-7 px-3 py-2">Ditangguhkan</span>
+              <% } else if (account.is_verified) { %>
+              <span class="badge badge-light-success fw-bolder fs-7 px-3 py-2">Terverifikasi</span>
+              <% } else { %>
+              <span class="badge badge-light-warning fw-bolder fs-7 px-3 py-2">Menunggu Aktivasi</span>
+              <% } %>
+            </td>
+            <td class="text-gray-600 fw-bold">
+              <%= formatDate(account.created_at) %>
+            </td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-2">
+                <form method="post" class="<%= account.is_suspended ? '' : 'suspend-confirm-form' %> m-0 d-inline" data-user-name="<%= account.name %>" action="/admin/users/<%= account.id %>/suspension">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <input type="hidden" name="suspended" value="<%= account.is_suspended ? '0' : '1' %>" />
+                  <button type="submit" class="btn btn-sm <%= account.is_suspended ? 'btn-light-success' : 'btn-light-warning' %> fw-bolder" <%= isCurrentAdmin ? 'disabled title="Akun admin saat ini tidak dapat ditangguhkan"' : '' %>>
+                    <%= account.is_suspended ? 'Aktifkan' : 'Suspend' %>
+                  </button>
+                </form>
+
+                <form method="post" action="/admin/users/<%= account.id %>/reset-password" class="m-0 d-inline">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+                  <button type="submit" class="btn btn-sm btn-light-primary fw-bolder" <%= !account.is_verified ? 'disabled title="Akun belum verifikasi"' : '' %>>
+                    Reset Password
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="text-center py-8 text-muted fs-6">
+      Belum ada akun pengguna terdaftar.
+    </div>
+    <% } %>
+  </div>
+
+  <div class="card-footer d-flex justify-content-between align-items-center py-5">
+    <span class="text-muted fs-7">
+      Menampilkan halaman <%= usersPage %> dari <%= usersPages %>
+    </span>
+    <div class="d-flex gap-2">
+      <% if (usersPage > 1) { %>
+      <a href="/admin?users_page=<%= usersPage - 1 %>" class="btn btn-sm btn-light">← Sebelumnya</a>
+      <% } %>
+      <% if (usersPage < usersPages) { %>
+      <a href="/admin?users_page=<%= usersPage + 1 %>" class="btn btn-sm btn-light">Berikutnya →</a>
+      <% } %>
+    </div>
+  </div>
+</div>
+<!--end::Users Management Card-->
+
+<!--begin::System Transactions Card-->
+<div class="card card-flush shadow-sm">
+  <div class="card-header align-items-center py-5">
+    <div class="card-title">
+      <div>
+        <h2 class="fs-4 fw-bolder text-gray-900 mb-0">Transaksi Terbaru Sistem</h2>
+        <span class="fs-7 text-muted fw-bold">Aktivitas dari seluruh pengguna akun</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body pt-0">
+    <% if (recentTransactions.length) { %>
+    <div class="table-responsive">
+      <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_admin_transactions_table">
+        <thead>
+          <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+            <th class="min-w-120px">ID Transaksi</th>
+            <th class="min-w-180px">Pengguna</th>
+            <th class="min-w-120px">Kategori</th>
+            <th class="min-w-120px">Tanggal</th>
+            <th class="min-w-100px">Jenis</th>
+            <th class="text-end min-w-120px">Nominal</th>
+          </tr>
+        </thead>
+        <tbody class="fw-bold text-gray-600">
+          <% recentTransactions.forEach(tx => { 
+            const isIncome = tx.kind === 'income';
+          %>
+          <tr>
+            <td>
+              <span class="text-primary fw-bolder"><%= formatTransactionReference(tx.id, tx.happened_on) %></span>
+            </td>
+            <td>
+              <div class="d-flex flex-column">
+                <span class="text-gray-900 fw-bolder fs-6"><%= tx.user_name %></span>
+                <span class="text-muted fs-8"><%= tx.user_email %></span>
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-light fw-bolder fs-7"><%= tx.category %></span>
+            </td>
+            <td class="text-gray-600 fw-bold">
+              <%= formatDate(tx.happened_on) %>
+            </td>
+            <td>
+              <span class="badge badge-light-<%= isIncome ? 'success' : 'danger' %> fs-7">
+                <%= isIncome ? 'Pemasukan' : 'Pengeluaran' %>
+              </span>
+            </td>
+            <td class="text-end">
+              <span class="fs-6 fw-bolder <%= isIncome ? 'text-success' : 'text-danger' %>">
+                <%= formatRupiah(tx.amount) %>
+              </span>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="text-center py-8 text-muted fs-6">
+      Belum ada transaksi di dalam sistem.
+    </div>
+    <% } %>
+  </div>
+</div>
+<!--end::System Transactions Card-->
+
 <%- include('partials/footer') %>

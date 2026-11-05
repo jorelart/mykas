@@ -1,4 +1,146 @@
 <%- include('partials/header') %>
-<div class="mx-auto max-w-5xl space-y-7 px-5 py-8 sm:px-8 lg:px-10"><section><p class="text-sm font-bold uppercase tracking-[.18em] text-indigo-600 dark:text-indigo-300">Pengaturan akun</p><h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">Profil & keamanan</h1><p class="mt-2 text-base text-slate-600 dark:text-slate-300">Perbarui informasi akun dan lindungi akses MyKas Anda.</p></section><div class="grid gap-6 md:grid-cols-2"><section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-7"><div class="mb-6"><h2 class="text-lg font-bold text-slate-900 dark:text-white">Informasi profil</h2><p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Nomor WhatsApp digunakan untuk layanan bot dan verifikasi.</p></div><form method="post" action="/profil" class="space-y-5"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Nama lengkap<input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="name" value="<%= account.name %>" maxlength="100" autocomplete="name" required></label><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Email<input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="email" type="email" value="<%= account.email %>" maxlength="160" autocomplete="email" <%= String(process.env.ADMIN_EMAIL || '').trim().toLowerCase() === account.email.toLowerCase() ? 'readonly' : '' %> required><% if (String(process.env.ADMIN_EMAIL || '').trim().toLowerCase() === account.email.toLowerCase()) { %><span class="mt-2 block text-xs font-medium text-slate-500 dark:text-slate-400">Email admin utama dikelola melalui konfigurasi server.</span><% } %></label><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Kata sandi saat ini <span class="font-normal text-slate-500">(diperlukan jika email diubah)</span><input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="current_password" type="password" autocomplete="current-password"></label><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Nomor WhatsApp<input class="mt-2 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400" value="<%= account.whatsapp_number %>" readonly><span class="mt-2 block text-xs font-medium text-slate-500 dark:text-slate-400">Hubungi admin untuk mengubah nomor setelah verifikasi.</span></label><button class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-700">Simpan profil</button></form></section>
-<section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-7"><div class="mb-6"><h2 class="text-lg font-bold text-slate-900 dark:text-white">Ganti kata sandi</h2><p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Masukkan kata sandi saat ini untuk mengonfirmasi perubahan.</p></div><form method="post" action="/profil/password" class="space-y-5"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Kata sandi saat ini<input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="current_password" type="password" autocomplete="current-password" required></label><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Kata sandi baru<input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required></label><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Ulangi kata sandi baru<input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="password_confirmation" type="password" minlength="8" maxlength="72" autocomplete="new-password" required></label><button class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-700">Perbarui kata sandi</button></form></section></div></div>
+
+<% const userInitial = String(account.name || 'U').trim().charAt(0).toUpperCase(); %>
+
+<!--begin::Profile Overview Card-->
+<div class="card mb-7 shadow-sm">
+  <div class="card-body pt-8 pb-5">
+    <div class="d-flex flex-wrap flex-sm-nowrap">
+      <div class="me-7 mb-4">
+        <div class="symbol symbol-80px symbol-lg-100px symbol-fixed position-relative">
+          <span class="symbol-label bg-primary text-white fs-1 fw-bolder"><%= userInitial %></span>
+          <div class="position-absolute translate-middle bottom-0 start-100 mb-4 bg-success rounded-circle border border-3 border-white h-18px w-18px"></div>
+        </div>
+      </div>
+
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-start flex-wrap mb-2">
+          <div class="d-flex flex-column">
+            <div class="d-flex align-items-center mb-1">
+              <h1 class="text-gray-900 fs-2 fw-bolder me-3 mb-0"><%= account.name %></h1>
+              <% if (account.is_verified) { %>
+              <span class="badge badge-light-success fw-bolder fs-8 px-3 py-1">Terverifikasi</span>
+              <% } else { %>
+              <span class="badge badge-light-warning fw-bolder fs-8 px-3 py-1">Belum Verifikasi</span>
+              <% } %>
+            </div>
+            <div class="d-flex flex-wrap fw-bold fs-7 mb-2 text-muted">
+              <span class="d-flex align-items-center text-gray-500 me-5 mb-1">
+                <span class="svg-icon svg-icon-5 me-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path opacity="0.3" d="M21 19H3C2.4 19 2 18.6 2 18V6C2 5.4 2.4 5 3 5H21C21.6 5 22 5.4 22 6V18C22 18.6 21.6 19 21 19Z" fill="currentColor"/>
+                    <path d="M21 5H2.99999C2.69999 5 2.49999 5.10005 2.39999 5.30005L11.2 11.5C11.7 11.9 12.4 11.9 12.9 11.5L21.7 5.30005C21.5 5.10005 21.3 5 21 5Z" fill="currentColor"/>
+                  </svg>
+                </span>
+                <%= account.email %>
+              </span>
+              <span class="d-flex align-items-center text-gray-500 me-5 mb-1">
+                <span class="svg-icon svg-icon-5 me-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path opacity="0.3" d="M20 3H4C2.89543 3 2 3.89543 2 5V16C2 17.1046 2.89543 18 4 18H4.5C5.05228 18 5.5 18.4477 5.5 19V21.5052C5.5 22.1441 6.21212 22.5253 6.74376 22.1708L11.4885 19.0077C12.4741 18.3506 13.6321 18 14.8167 18H20C21.1046 18 22 17.1046 22 16V5C22 3.89543 21.1046 3 20 3Z" fill="currentColor"/>
+                    <rect x="6" y="12" width="7" height="2" rx="1" fill="currentColor"/>
+                    <rect x="6" y="7" width="12" height="2" rx="1" fill="currentColor"/>
+                  </svg>
+                </span>
+                <%= account.whatsapp_number %>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--end::Profile Overview Card-->
+
+<div class="row g-7">
+  <!--begin::Profile Form Column-->
+  <div class="col-lg-6">
+    <div class="card card-flush shadow-sm h-100">
+      <div class="card-header align-items-center py-5">
+        <div class="card-title">
+          <div>
+            <h2 class="fs-4 fw-bolder text-gray-900 mb-0">Informasi Profil</h2>
+            <span class="fs-7 text-muted fw-bold">Perbarui data nama dan email Anda</span>
+          </div>
+        </div>
+      </div>
+
+      <form method="post" action="/profil" class="form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <div class="card-body pt-0">
+          <div class="fv-row mb-5">
+            <label class="required fs-6 fw-bold mb-2">Nama Lengkap</label>
+            <input type="text" name="name" class="form-control form-control-solid" value="<%= account.name %>" maxlength="100" autocomplete="name" required />
+          </div>
+
+          <div class="fv-row mb-5">
+            <label class="required fs-6 fw-bold mb-2">Alamat Email</label>
+            <% const isMainAdmin = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase() === account.email.toLowerCase(); %>
+            <input type="email" name="email" class="form-control form-control-solid" value="<%= account.email %>" maxlength="160" autocomplete="email" <%= isMainAdmin ? 'readonly' : '' %> required />
+            <% if (isMainAdmin) { %>
+            <span class="form-text text-muted fs-8 mt-1">Email admin utama dikelola melalui konfigurasi server (.env).</span>
+            <% } %>
+          </div>
+
+          <div class="fv-row mb-5">
+            <label class="fs-6 fw-bold mb-2">Kata Sandi Saat Ini <span class="text-muted fw-normal fs-7">(wajib diisi jika email diubah)</span></label>
+            <input type="password" name="current_password" class="form-control form-control-solid" autocomplete="current-password" placeholder="Masukkan kata sandi saat ini" />
+          </div>
+
+          <div class="fv-row mb-5">
+            <label class="fs-6 fw-bold mb-2">Nomor WhatsApp Terhubung</label>
+            <input type="text" class="form-control form-control-solid bg-secondary" value="<%= account.whatsapp_number %>" readonly />
+            <span class="form-text text-muted fs-8 mt-1">Nomor WhatsApp digunakan untuk autentikasi bot dan verifikasi akun.</span>
+          </div>
+        </div>
+
+        <div class="card-footer d-flex justify-content-end py-6 px-9">
+          <button type="submit" class="btn btn-primary fw-bolder">Simpan Perubahan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!--end::Profile Form Column-->
+
+  <!--begin::Password Form Column-->
+  <div class="col-lg-6">
+    <div class="card card-flush shadow-sm h-100">
+      <div class="card-header align-items-center py-5">
+        <div class="card-title">
+          <div>
+            <h2 class="fs-4 fw-bolder text-gray-900 mb-0">Ganti Kata Sandi</h2>
+            <span class="fs-7 text-muted fw-bold">Pastikan kata sandi baru aman dan kuat</span>
+          </div>
+        </div>
+      </div>
+
+      <form method="post" action="/profil/password" class="form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+        <div class="card-body pt-0">
+          <div class="fv-row mb-5">
+            <label class="required fs-6 fw-bold mb-2">Kata Sandi Saat Ini</label>
+            <input type="password" name="current_password" class="form-control form-control-solid" autocomplete="current-password" placeholder="Masukkan kata sandi saat ini" required />
+          </div>
+
+          <div class="fv-row mb-5">
+            <label class="required fs-6 fw-bold mb-2">Kata Sandi Baru</label>
+            <input type="password" name="password" class="form-control form-control-solid" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Minimal 8 karakter" required />
+          </div>
+
+          <div class="fv-row mb-5">
+            <label class="required fs-6 fw-bold mb-2">Ulangi Kata Sandi Baru</label>
+            <input type="password" name="password_confirmation" class="form-control form-control-solid" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Ketik ulang kata sandi baru" required />
+          </div>
+        </div>
+
+        <div class="card-footer d-flex justify-content-end py-6 px-9">
+          <button type="submit" class="btn btn-light-primary fw-bolder">Perbarui Kata Sandi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!--end::Password Form Column-->
+</div>
+
 <%- include('partials/footer') %>

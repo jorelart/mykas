@@ -1,9 +1,281 @@
 <%- include('partials/header') %>
-<div class="mx-auto max-w-7xl space-y-7 px-5 py-8 sm:px-8 lg:px-10"><section><p class="text-sm font-bold uppercase tracking-[.18em] text-indigo-600 dark:text-indigo-300">Analisis keuangan</p><h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-4xl">Laporan</h1><p class="mt-2 text-base text-slate-600 dark:text-slate-300">Laporan untuk dompet aktif: <strong class="text-slate-900 dark:text-white"><%= activeWallet ? activeWallet.name : 'belum dipilih' %></strong>.<% if (!activeWallet) { %> <a class="font-bold text-indigo-700 underline dark:text-indigo-300" href="/dompet">Pilih dompet</a><% } %></p></section>
-<form class="grid gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:grid-cols-2 xl:grid-cols-4 xl:items-end" method="get"><label class="grid gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">Jenis transaksi<select class="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="jenis"><option value="">Semua jenis</option><option value="income" <%= kind === 'income' ? 'selected' : '' %>>Pemasukan</option><option value="expense" <%= kind === 'expense' ? 'selected' : '' %>>Pengeluaran</option></select></label><label class="grid gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">Dari tanggal<input class="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" type="date" name="dari" value="<%= start %>" required></label><label class="grid gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">Sampai tanggal<input class="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" type="date" name="sampai" value="<%= end %>" required></label><button class="h-11 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white hover:bg-indigo-700">Tampilkan laporan</button></form>
-<section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"><article class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 dark:border-emerald-900/60 dark:bg-emerald-950/35"><p class="text-sm font-semibold text-emerald-800 dark:text-emerald-200">Total pemasukan</p><p class="mt-2 text-2xl font-bold text-emerald-900 dark:text-emerald-100"><%= formatRupiah(income) %></p><p class="mt-2 text-sm text-emerald-800/80 dark:text-emerald-200/80">Dalam periode terpilih</p></article><article class="rounded-2xl border border-rose-200 bg-rose-50 p-5 dark:border-rose-900/60 dark:bg-rose-950/35"><p class="text-sm font-semibold text-rose-800 dark:text-rose-200">Total pengeluaran</p><p class="mt-2 text-2xl font-bold text-rose-900 dark:text-rose-100"><%= formatRupiah(expense) %></p><p class="mt-2 text-sm text-rose-800/80 dark:text-rose-200/80">Dalam periode terpilih</p></article><article class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 dark:border-indigo-900/60 dark:bg-indigo-950/35 sm:col-span-2 xl:col-span-1"><p class="text-sm font-semibold text-indigo-800 dark:text-indigo-200">Selisih bersih</p><p class="mt-2 text-2xl font-bold text-indigo-900 dark:text-indigo-100"><%= formatRupiah(income-expense) %></p><p class="mt-2 text-sm text-indigo-800/80 dark:text-indigo-200/80">Pemasukan dikurangi pengeluaran</p></article></section>
-<% const tableClass = 'min-w-full divide-y divide-slate-200 text-left dark:divide-slate-700'; const thClass = 'px-5 py-3 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300'; const tdClass = 'whitespace-nowrap px-5 py-4 text-sm font-semibold text-slate-700 dark:text-slate-200'; %>
-<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"><div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700"><h2 class="font-bold text-slate-900 dark:text-white">Ringkasan kategori</h2><p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Akumulasi nilai per kategori untuk periode ini.</p></div><% if (categories.length) { %><div class="overflow-x-auto"><table class="<%= tableClass %>"><thead class="bg-slate-50 dark:bg-slate-900/60"><tr><th class="<%= thClass %>">Kategori</th><th class="<%= thClass %>">Jenis</th><th class="<%= thClass %> text-right">Total</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700"><% categories.forEach(row => { %><tr><td class="<%= tdClass %>"><%= row.category %></td><td class="<%= tdClass %>"><%= row.kind === 'income' ? 'Pemasukan' : 'Pengeluaran' %></td><td class="<%= tdClass %> text-right font-bold <%= row.kind === 'income' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' %>"><%= formatRupiah(row.total) %></td></tr><% }) %></tbody></table></div><% } else { %><div class="p-8 text-center text-sm text-slate-600 dark:text-slate-300">Belum ada data pada periode ini.</div><% } %></section>
-<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"><div class="border-b border-slate-200 px-5 py-4 dark:border-slate-700"><h2 class="font-bold text-slate-900 dark:text-white">Rincian transaksi</h2><p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Hingga 500 transaksi pada periode yang dipilih.</p></div><% if (rows.length) { %><div class="overflow-x-auto"><table class="<%= tableClass %>"><thead class="bg-slate-50 dark:bg-slate-900/60"><tr><th class="<%= thClass %>">ID transaksi</th><th class="<%= thClass %>">Tanggal</th><th class="<%= thClass %>">Keterangan</th><th class="<%= thClass %>">Kategori</th><th class="<%= thClass %>">Jenis</th><th class="<%= thClass %> text-right">Nominal</th></tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700"><% rows.forEach(tx => { %><tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40"><td class="<%= tdClass %>"><a class="text-indigo-700 hover:underline dark:text-indigo-300" href="/transaksi/<%= tx.id %>"><%= formatTransactionReference(tx.id,tx.happened_on) %></a></td><td class="<%= tdClass %>"><%= formatDate(tx.happened_on) %></td><td class="<%= tdClass %>"><a class="hover:text-indigo-700 dark:hover:text-indigo-300" href="/transaksi/<%= tx.id %>"><%= tx.note || '—' %></a></td><td class="<%= tdClass %>"><%= tx.category %></td><td class="<%= tdClass %>"><%= tx.kind === 'income' ? 'Pemasukan' : 'Pengeluaran' %></td><td class="<%= tdClass %> text-right font-bold <%= tx.kind === 'income' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' %>"><%= formatRupiah(tx.amount) %></td></tr><% }) %></tbody></table></div><% } else { %><div class="p-8 text-center text-sm text-slate-600 dark:text-slate-300">Tidak ada transaksi pada periode ini.</div><% } %></section>
-<section class="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-800" id="whatsapp"><p class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Integrasi WhatsApp</p><h2 class="mt-2 text-lg font-bold text-slate-900 dark:text-white">Catat transaksi dari chat</h2><p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">Atur webhook Evolution API ke <code class="break-all rounded bg-slate-100 px-1.5 py-1 text-xs dark:bg-slate-900"><%= publicUrl %>/api/webhook/evolution</code> dan samakan secret dengan <code>EVOLUTION_WEBHOOK_SECRET</code>.</p><div class="mt-4 flex flex-wrap gap-2"><code class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">/masuk 50000 Gaji</code><code class="rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">/keluar 25000 Makan siang</code></div><p class="mt-3 text-sm text-slate-500 dark:text-slate-400">Nomor pengirim harus sama dengan nomor WhatsApp akun. Secret diterima melalui header x-webhook-secret atau parameter URL.</p></section></div>
+
+<!--begin::Filter Card-->
+<div class="card mb-7 shadow-sm">
+  <div class="card-body py-5">
+    <form method="get" action="/laporan" class="row g-4 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label fs-7 fw-bolder text-gray-700">Jenis Transaksi</label>
+        <select name="jenis" class="form-select form-select-solid">
+          <option value="">Semua Jenis</option>
+          <option value="income" <%= kind === 'income' ? 'selected' : '' %>>Pemasukan</option>
+          <option value="expense" <%= kind === 'expense' ? 'selected' : '' %>>Pengeluaran</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label fs-7 fw-bolder text-gray-700">Dari Tanggal</label>
+        <input type="date" name="dari" class="form-control form-control-solid" value="<%= start %>" required />
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label fs-7 fw-bolder text-gray-700">Sampai Tanggal</label>
+        <input type="date" name="sampai" class="form-control form-control-solid" value="<%= end %>" required />
+      </div>
+
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-primary w-100">
+          <span class="svg-icon svg-icon-2 me-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path d="M14 3V21H10V3C10 2.4 10.4 2 11 2H13C13.6 2 14 2.4 14 3ZM7 14H5C4.4 14 4 14.4 4 15V21H8V15C8 14.4 7.6 14 7 14Z" fill="currentColor"/>
+              <path d="M21 20H20V8C20 7.4 19.6 7 19 7H17C16.4 7 16 7.4 16 8V20H3C2.4 20 2 20.4 2 21C2 21.6 2.4 22 3 22H21C21.6 22 22 21.6 22 21C22 20.4 21.6 20 21 20Z" fill="currentColor"/>
+            </svg>
+          </span>
+          Tampilkan Laporan
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+<!--end::Filter Card-->
+
+<!--begin::Summary Cards-->
+<div class="row g-5 g-xl-8 mb-7">
+  <div class="col-md-4">
+    <div class="card card-flush bg-light-success border border-success border-dashed h-100 shadow-sm">
+      <div class="card-body p-6">
+        <div class="d-flex align-items-center mb-2">
+          <div class="symbol symbol-40px symbol-light-success me-3">
+            <span class="symbol-label">
+              <span class="svg-icon svg-icon-2 svg-icon-success">
+                <rect opacity="0.5" x="11" y="18" width="13" height="2" rx="1" transform="rotate(-90 11 18)" fill="currentColor"/>
+                <path d="M11.4343 15.4343L7.25 11.25C6.83579 10.8358 6.16421 10.8358 5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75L11.2929 18.2929C11.6834 18.6834 12.3166 18.6834 12.7071 18.2929L18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25L12.5657 15.4343C12.2533 15.7467 11.7467 15.7467 11.4343 15.4343Z" fill="currentColor"/>
+              </span>
+            </span>
+          </div>
+          <div>
+            <div class="text-success fw-bold fs-7">Total Pemasukan</div>
+            <div class="fs-2x fw-bolder text-success"><%= formatRupiah(income) %></div>
+          </div>
+        </div>
+        <div class="text-muted fs-8">Periode: <%= formatDate(start) %> – <%= formatDate(end) %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card card-flush bg-light-danger border border-danger border-dashed h-100 shadow-sm">
+      <div class="card-body p-6">
+        <div class="d-flex align-items-center mb-2">
+          <div class="symbol symbol-40px symbol-light-danger me-3">
+            <span class="symbol-label">
+              <span class="svg-icon svg-icon-2 svg-icon-danger">
+                <rect opacity="0.5" x="13" y="6" width="13" height="2" rx="1" transform="rotate(90 13 6)" fill="currentColor"/>
+                <path d="M12.5657 8.56569L16.75 12.75C17.1642 13.1642 17.8358 13.1642 18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25L12.7071 5.70711C12.3166 5.31658 11.6834 5.31658 11.2929 5.70711L5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75C6.16421 13.1642 6.83579 13.1642 7.25 12.75L11.4343 8.56569C11.7467 8.25327 12.2533 8.25327 12.5657 8.56569Z" fill="currentColor"/>
+              </span>
+            </span>
+          </div>
+          <div>
+            <div class="text-danger fw-bold fs-7">Total Pengeluaran</div>
+            <div class="fs-2x fw-bolder text-danger"><%= formatRupiah(expense) %></div>
+          </div>
+        </div>
+        <div class="text-muted fs-8">Periode: <%= formatDate(start) %> – <%= formatDate(end) %></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <% const netBalance = Number(income) - Number(expense); %>
+    <div class="card card-flush bg-light-primary border border-primary border-dashed h-100 shadow-sm">
+      <div class="card-body p-6">
+        <div class="d-flex align-items-center mb-2">
+          <div class="symbol symbol-40px symbol-light-primary me-3">
+            <span class="symbol-label">
+              <span class="svg-icon svg-icon-2 svg-icon-primary">
+                <path opacity="0.3" d="M14 3V21H10V3C10 2.4 10.4 2 11 2H13C13.6 2 14 2.4 14 3ZM7 14H5C4.4 14 4 14.4 4 15V21H8V15C8 14.4 7.6 14 7 14Z" fill="currentColor"/>
+                <path d="M21 20H20V8C20 7.4 19.6 7 19 7H17C16.4 7 16 7.4 16 8V20H3C2.4 20 2 20.4 2 21C2 21.6 2.4 22 3 22H21C21.6 22 22 21.6 22 21C22 20.4 21.6 20 21 20Z" fill="currentColor"/>
+              </span>
+            </span>
+          </div>
+          <div>
+            <div class="text-primary fw-bold fs-7">Selisih Bersih</div>
+            <div class="fs-2x fw-bolder <%= netBalance >= 0 ? 'text-primary' : 'text-danger' %>"><%= formatRupiah(netBalance) %></div>
+          </div>
+        </div>
+        <div class="text-muted fs-8">Pemasukan dikurangi pengeluaran</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--end::Summary Cards-->
+
+<!--begin::Categories Breakdown Card-->
+<div class="card card-flush shadow-sm mb-7">
+  <div class="card-header align-items-center py-5">
+    <div class="card-title">
+      <div>
+        <h2 class="fs-4 fw-bolder text-gray-900 mb-0">Ringkasan per Kategori</h2>
+        <span class="fs-7 text-muted fw-bold">Akumulasi transaksi per kategori pada periode ini</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-body pt-0">
+    <% if (categories.length) { %>
+    <div class="table-responsive">
+      <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_report_categories_table">
+        <thead>
+          <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+            <th class="min-w-200px">Kategori</th>
+            <th class="min-w-120px">Jenis</th>
+            <th class="text-end min-w-150px">Total Akumulasi</th>
+          </tr>
+        </thead>
+        <tbody class="fw-bold text-gray-600">
+          <% categories.forEach(row => { 
+            const isIncome = row.kind === 'income';
+          %>
+          <tr>
+            <td>
+              <span class="text-gray-900 fw-bolder fs-6"><%= row.category %></span>
+            </td>
+            <td>
+              <span class="badge badge-light-<%= isIncome ? 'success' : 'danger' %> fw-bolder fs-7">
+                <%= isIncome ? 'Pemasukan' : 'Pengeluaran' %>
+              </span>
+            </td>
+            <td class="text-end">
+              <span class="fs-6 fw-bolder <%= isIncome ? 'text-success' : 'text-danger' %>">
+                <%= formatRupiah(row.total) %>
+              </span>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="text-center py-8 text-muted fs-6">
+      Belum ada data kategori pada periode yang dipilih.
+    </div>
+    <% } %>
+  </div>
+</div>
+<!--end::Categories Breakdown Card-->
+
+<!--begin::Transaction Details Table-->
+<div class="card card-flush shadow-sm mb-7">
+  <div class="card-header align-items-center py-5">
+    <div class="card-title">
+      <div>
+        <h2 class="fs-4 fw-bolder text-gray-900 mb-0">Rincian Transaksi</h2>
+        <span class="fs-7 text-muted fw-bold">Daftar transaksi lengkap dalam rentang tanggal terpilih</span>
+      </div>
+    </div>
+    <div class="card-toolbar">
+      <span class="badge badge-light-primary fw-bolder fs-7 px-3 py-2"><%= rows.length %> Transaksi</span>
+    </div>
+  </div>
+
+  <div class="card-body pt-0">
+    <% if (rows.length) { %>
+    <div class="table-responsive">
+      <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_report_transactions_table">
+        <thead>
+          <tr class="text-start text-gray-400 fw-bolder fs-7 text-uppercase gs-0">
+            <th class="min-w-120px">ID Transaksi</th>
+            <th class="min-w-120px">Tanggal</th>
+            <th class="min-w-200px">Keterangan</th>
+            <th class="min-w-120px">Kategori</th>
+            <th class="min-w-100px">Jenis</th>
+            <th class="text-end min-w-120px">Nominal</th>
+          </tr>
+        </thead>
+        <tbody class="fw-bold text-gray-600">
+          <% rows.forEach(tx => { 
+            const isIncome = tx.kind === 'income';
+          %>
+          <tr>
+            <td>
+              <a href="/transaksi/<%= tx.id %>" class="text-primary fw-bolder">
+                <%= formatTransactionReference(tx.id, tx.happened_on) %>
+              </a>
+            </td>
+            <td class="text-gray-700 fw-bold">
+              <%= formatDate(tx.happened_on) %>
+            </td>
+            <td>
+              <a href="/transaksi/<%= tx.id %>" class="text-gray-800 text-hover-primary text-truncate d-block" style="max-width: 250px;">
+                <%= tx.note || '—' %>
+              </a>
+            </td>
+            <td>
+              <span class="badge badge-light fw-bolder fs-7"><%= tx.category %></span>
+            </td>
+            <td>
+              <span class="badge badge-light-<%= isIncome ? 'success' : 'danger' %> fs-7">
+                <%= isIncome ? 'Pemasukan' : 'Pengeluaran' %>
+              </span>
+            </td>
+            <td class="text-end">
+              <span class="fs-6 fw-bolder <%= isIncome ? 'text-success' : 'text-danger' %>">
+                <%= formatRupiah(tx.amount) %>
+              </span>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } else { %>
+    <div class="text-center py-8 text-muted fs-6">
+      Tidak ada transaksi pada periode yang dipilih.
+    </div>
+    <% } %>
+  </div>
+</div>
+<!--end::Transaction Details Table-->
+
+<!--begin::WhatsApp Integration Info-->
+<div class="card card-flush shadow-sm bg-light-primary border border-primary border-dashed" id="whatsapp">
+  <div class="card-body p-7">
+    <div class="d-flex align-items-center mb-4">
+      <div class="symbol symbol-40px symbol-light-success me-3">
+        <span class="symbol-label">
+          <span class="svg-icon svg-icon-2 svg-icon-success">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <path opacity="0.3" d="M20 3H4C2.89543 3 2 3.89543 2 5V16C2 17.1046 2.89543 18 4 18H4.5C5.05228 18 5.5 18.4477 5.5 19V21.5052C5.5 22.1441 6.21212 22.5253 6.74376 22.1708L11.4885 19.0077C12.4741 18.3506 13.6321 18 14.8167 18H20C21.1046 18 22 17.1046 22 16V5C22 3.89543 21.1046 3 20 3Z" fill="currentColor"/>
+              <rect x="6" y="12" width="7" height="2" rx="1" fill="currentColor"/>
+              <rect x="6" y="7" width="12" height="2" rx="1" fill="currentColor"/>
+            </svg>
+          </span>
+        </span>
+      </div>
+      <div>
+        <h3 class="fs-5 fw-bolder text-gray-900 mb-0">Integrasi WhatsApp Bot</h3>
+        <span class="fs-7 text-muted fw-bold">Catat transaksi otomatis langsung dari pesan WhatsApp Anda</span>
+      </div>
+    </div>
+
+    <p class="fs-7 text-gray-600 mb-4 lh-base">
+      Arahkan webhook Evolution API ke URL di bawah ini dengan menyertakan secret key pada header <code>x-webhook-secret</code> atau query parameter:
+    </p>
+
+    <div class="bg-white rounded p-3 mb-4 border border-gray-300 font-monospace fs-7 text-primary text-break">
+      <%= publicUrl %>/api/webhook/evolution
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <code class="bg-white border rounded px-3 py-2 text-success fw-bold">/masuk 50000 Gaji</code>
+      <code class="bg-white border rounded px-3 py-2 text-danger fw-bold">/keluar 25000 Makan siang</code>
+    </div>
+
+    <span class="text-muted fs-8 d-block">
+      Nomor pengirim WhatsApp harus sesuai dengan nomor WhatsApp yang terdaftar pada profil akun Anda.
+    </span>
+  </div>
+</div>
+<!--end::WhatsApp Integration Info-->
+
 <%- include('partials/footer') %>

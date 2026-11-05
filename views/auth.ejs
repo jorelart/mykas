@@ -1,5 +1,83 @@
 <%- include('partials/header') %>
-<section class="rounded-3xl border border-slate-200 bg-white p-7 shadow-xl shadow-slate-900/5 dark:border-slate-700 dark:bg-slate-900 sm:p-9"><p class="text-xs font-bold uppercase tracking-[.18em] text-indigo-600 dark:text-indigo-300">MyKas · Keuangan lebih tertata</p><h1 class="mt-3 text-2xl font-bold tracking-tight text-slate-900 dark:text-white"><%= mode === 'register' ? 'Ruang keuangan yang lebih rapi.' : mode === 'forgot' ? 'Atur ulang kata sandi.' : 'Senang melihat Anda kembali.' %></h1><p class="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300"><%= mode === 'register' ? 'Buat akun untuk mencatat pemasukan dan pengeluaran dengan mudah.' : mode === 'forgot' ? 'Masukkan email akun. Kode verifikasi akan dikirim ke WhatsApp yang terhubung.' : 'Masuk untuk melihat ringkasan dan aktivitas keuangan Anda.' %></p>
-<form method="post" action="<%= mode === 'forgot' ? '/lupa-password' : mode === 'register' ? '/register' : '/login' %>" class="mt-7 space-y-5"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><% if (mode === 'register') { %><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Nama lengkap<input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-700 dark:bg-slate-800 dark:text-white" name="name" placeholder="Contoh: Andi Pratama" required maxlength="100" autocomplete="name"></label><% } %><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Email<input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-700 dark:bg-slate-800 dark:text-white" name="email" type="email" placeholder="nama@email.com" required autocomplete="email"></label><% if (mode === 'register') { %><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Nomor WhatsApp<input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-700 dark:bg-slate-800 dark:text-white" name="whatsapp_number" type="tel" placeholder="081234567890" required autocomplete="tel"><small class="mt-2 block text-sm text-slate-500 dark:text-slate-400">OTP aktivasi dan reset kata sandi dikirim ke nomor ini.</small></label><% } %><% if (mode !== 'forgot') { %><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Kata sandi<input class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-700 dark:bg-slate-800 dark:text-white" name="password" type="password" placeholder="<%= mode === 'register' ? 'Minimal 8 karakter' : 'Masukkan kata sandi' %>" required <% if (mode === 'register') { %>minlength="8"<% } %> autocomplete="<%= mode === 'register' ? 'new-password' : 'current-password' %>"></label><% } %><button class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800"><%= mode === 'register' ? 'Lanjutkan aktivasi' : mode === 'forgot' ? 'Kirim kode reset' : 'Masuk ke akun' %><span>→</span></button></form>
-<div class="mt-6 border-t border-slate-200 pt-5 text-center text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300"><% if (mode === 'register') { %>Sudah punya akun? <a class="font-bold text-indigo-700 hover:underline dark:text-indigo-300" href="/login">Masuk</a><% } else if (mode === 'forgot') { %>Ingat kata sandi? <a class="font-bold text-indigo-700 hover:underline dark:text-indigo-300" href="/login">Kembali masuk</a><% } else { %>Belum punya akun? <a class="font-bold text-indigo-700 hover:underline dark:text-indigo-300" href="/register">Daftar gratis</a><br><a class="mt-3 inline-block font-semibold text-slate-500 hover:text-indigo-700 dark:text-slate-400 dark:hover:text-indigo-300" href="/lupa-password">Lupa kata sandi?</a><% } %></div></section>
+
+<!--begin::Auth Heading-->
+<div class="text-center mb-8">
+  <h1 class="text-gray-900 mb-2 fs-2x fw-bolder">
+    <%= mode === 'register' ? 'Daftar Akun Baru' : mode === 'forgot' ? 'Atur Ulang Sandi' : 'Selamat Datang' %>
+  </h1>
+  <div class="text-gray-500 fw-bold fs-6">
+    <%= mode === 'register' 
+      ? 'Buat akun untuk mencatat pemasukan dan pengeluaran Anda.' 
+      : mode === 'forgot' 
+      ? 'Masukkan email akun. Kode verifikasi akan dikirim ke WhatsApp Anda.' 
+      : 'Masuk untuk mengelola keuangan dan dompet Anda.' 
+    %>
+  </div>
+</div>
+<!--end::Auth Heading-->
+
+<!--begin::Auth Form-->
+<form method="post" action="<%= mode === 'forgot' ? '/lupa-password' : mode === 'register' ? '/register' : '/login' %>" class="form w-100" novalidate="novalidate">
+  <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+  <% if (mode === 'register') { %>
+  <div class="fv-row mb-6">
+    <label class="form-label fs-7 fw-bolder text-gray-900">Nama Lengkap</label>
+    <input class="form-control form-control-solid" type="text" name="name" placeholder="Contoh: Andi Pratama" required maxlength="100" autocomplete="name" />
+  </div>
+  <% } %>
+
+  <div class="fv-row mb-6">
+    <label class="form-label fs-7 fw-bolder text-gray-900">Alamat Email</label>
+    <input class="form-control form-control-solid" type="email" name="email" placeholder="nama@email.com" required autocomplete="email" />
+  </div>
+
+  <% if (mode === 'register') { %>
+  <div class="fv-row mb-6">
+    <label class="form-label fs-7 fw-bolder text-gray-900">Nomor WhatsApp</label>
+    <input class="form-control form-control-solid" type="tel" name="whatsapp_number" placeholder="081234567890" required autocomplete="tel" />
+    <span class="text-muted fs-8 mt-1 d-block">OTP aktivasi dan verifikasi dikirim ke nomor ini.</span>
+  </div>
+  <% } %>
+
+  <% if (mode !== 'forgot') { %>
+  <div class="fv-row mb-7">
+    <div class="d-flex flex-stack mb-2">
+      <label class="form-label fw-bolder text-gray-900 fs-7 mb-0">Kata Sandi</label>
+      <% if (mode === 'login') { %>
+      <a href="/lupa-password" class="link-primary fs-7 fw-bolder">Lupa kata sandi?</a>
+      <% } %>
+    </div>
+    <input class="form-control form-control-solid" type="password" name="password" placeholder="<%= mode === 'register' ? 'Minimal 8 karakter' : 'Masukkan kata sandi' %>" required <% if (mode === 'register') { %>minlength="8"<% } %> autocomplete="<%= mode === 'register' ? 'new-password' : 'current-password' %>" />
+  </div>
+  <% } %>
+
+  <div class="text-center pt-2">
+    <button type="submit" class="btn btn-primary w-100 fw-bolder py-3 shadow-sm">
+      <%= mode === 'register' ? 'Lanjutkan Aktivasi' : mode === 'forgot' ? 'Kirim Kode Reset' : 'Masuk ke Akun' %>
+      <span class="svg-icon svg-icon-3 ms-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect opacity="0.5" x="18" y="13" width="13" height="2" rx="1" transform="rotate(-180 18 13)" fill="currentColor"/>
+          <path d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z" fill="currentColor"/>
+        </svg>
+      </span>
+    </button>
+  </div>
+</form>
+<!--end::Auth Form-->
+
+<!--begin::Auth Footer Links-->
+<div class="separator separator-dashed my-6 border-gray-300"></div>
+
+<div class="text-center text-gray-500 fw-bold fs-7">
+  <% if (mode === 'register') { %>
+  Sudah punya akun? <a href="/login" class="link-primary fw-bolder">Masuk di sini</a>
+  <% } else if (mode === 'forgot') { %>
+  Ingat kata sandi? <a href="/login" class="link-primary fw-bolder">Kembali masuk</a>
+  <% } else { %>
+  Belum punya akun? <a href="/register" class="link-primary fw-bolder">Daftar sekarang</a>
+  <% } %>
+</div>
+<!--end::Auth Footer Links-->
+
 <%- include('partials/footer') %>

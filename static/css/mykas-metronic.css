@@ -1,57 +1,80 @@
-:root { color-scheme: light; }
-html.dark { color-scheme: dark; }
-body.mykas-body { margin: 0; min-height: 100vh; background: #f5f8fa; color: #181c32; font-family: Poppins, system-ui, sans-serif; }
-.mykas-root, .mykas-page { min-height: 100vh; }
-.mykas-aside { position: fixed; z-index: 100; inset: 0 auto 0 0; display: flex; width: 260px; flex-direction: column; padding: 24px 16px 18px; background: #fff; border-right: 1px solid #eff2f5; }
-.mykas-brand, .mykas-auth-brand { display: inline-flex; align-items: center; gap: 12px; padding: 4px 12px 28px; color: #181c32; font-size: 22px; font-weight: 700; text-decoration: none; }
-.mykas-brand-mark { display: inline-grid; width: 40px; height: 40px; place-items: center; border-radius: 13px; background: #4f46e5; color: #fff; font-size: 20px; font-weight: 700; }
-.mykas-aside-label { padding: 8px 14px 12px; color: #a1a5b7; font-size: 11px; font-weight: 700; letter-spacing: .1em; }
-.mykas-nav { gap: 5px; }
-.mykas-nav .menu-link { min-height: 46px; gap: 12px; padding: 0 14px; border-radius: 10px; color: #5e6278; font-size: 14px; font-weight: 600; }
-.mykas-nav .menu-link:hover, .mykas-nav .menu-link.active { background: #f1f1ff; color: #4f46e5; }
-.mykas-nav-icon { display: inline-grid; width: 22px; place-items: center; font-size: 19px; }
-.mykas-sidebar-bottom { margin-top: auto; padding: 14px 5px 0; border-top: 1px solid #eff2f5; }
-.mykas-user-card { display: flex; min-width: 0; align-items: center; gap: 11px; padding: 9px; color: inherit; text-decoration: none; }
-.mykas-avatar { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border-radius: 50%; background: #e8eaff; color: #4f46e5; font-weight: 700; }
-.mykas-user-copy { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
-.mykas-user-copy strong, .mykas-user-copy small { overflow: hidden; max-width: 168px; text-overflow: ellipsis; white-space: nowrap; }
-.mykas-user-copy strong { color: #181c32; font-size: 13px; }
-.mykas-user-copy small { color: #7e8299; font-size: 11px; }
-.mykas-logout { width: 100%; padding: 8px 12px; border: 0; border-radius: 8px; background: transparent; color: #7e8299; text-align: left; font-size: 13px; font-weight: 600; }
-.mykas-logout:hover { background: #fff5f8; color: #f1416c; }
-.mykas-wrapper { min-width: 0; margin-left: 260px; }
-.mykas-topbar { position: sticky; z-index: 50; top: 0; display: flex; min-height: 82px; align-items: center; justify-content: space-between; gap: 20px; padding: 14px clamp(18px, 3vw, 42px); border-bottom: 1px solid #eff2f5; background: rgb(255 255 255 / 94%); backdrop-filter: blur(12px); }
-.mykas-eyebrow { margin: 0 0 3px; color: #a1a5b7; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
-.mykas-page-title { margin: 0; color: #181c32; font-size: 20px; font-weight: 700; }
-.mykas-topbar-actions { display: flex; align-items: center; gap: 12px; }
-.mykas-wallet-picker { display: flex; align-items: center; gap: 9px; padding: 7px 10px; border: 1px solid #eff2f5; border-radius: 10px; background: #fff; }
-.mykas-wallet-picker label { color: #7e8299; font-size: 12px; font-weight: 600; }
-.mykas-wallet-picker select { max-width: 230px; border: 0; background: transparent; color: #181c32; font-size: 13px; font-weight: 700; outline: none; }
-.mykas-wallet-pill { padding: 10px 13px; border: 1px solid #eff2f5; border-radius: 10px; color: #5e6278; font-size: 13px; text-decoration: none; }
-.mykas-wallet-pill strong { color: #4f46e5; }
-.mykas-theme-toggle { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #eff2f5; border-radius: 10px; background: #fff; color: #5e6278; font-size: 19px; }
-.mykas-content { width: 100%; max-width: 1600px; min-height: calc(100vh - 140px); margin: 0 auto; padding: 25px clamp(18px, 3vw, 42px); }
-.mykas-content > div.mx-auto { max-width: none; padding: 0; }
-.mykas-flashes { display: grid; gap: 10px; margin: 0 0 18px; }
-.mykas-footer { display: flex; justify-content: space-between; gap: 12px; padding: 18px clamp(18px, 3vw, 42px); border-top: 1px solid #eff2f5; color: #7e8299; font-size: 12px; }
-.mykas-auth-page { display: flex; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 28px 18px; background: #f5f8fa; }
-.mykas-auth-brand { padding: 0 0 24px; }
-.mykas-auth-content { width: 100%; max-width: 520px; }
-.mykas-auth-content > section { width: 100%; }
-.mykas-auth-foot { margin: 24px 0 0; color: #7e8299; font-size: 12px; }
-html.dark body.mykas-body, html.dark .mykas-auth-page { background: #10111b; color: #e2e4f3; }
-html.dark .mykas-aside, html.dark .mykas-topbar, html.dark .mykas-wallet-picker, html.dark .mykas-theme-toggle { border-color: #292a3c; background: #191a28; }
-html.dark .mykas-brand, html.dark .mykas-page-title, html.dark .mykas-user-copy strong, html.dark .mykas-wallet-picker select { color: #f4f4fa; }
-html.dark .mykas-nav .menu-link { color: #a1a5b7; }
-html.dark .mykas-nav .menu-link:hover, html.dark .mykas-nav .menu-link.active { background: #272744; color: #aaa5ff; }
-html.dark .mykas-sidebar-bottom, html.dark .mykas-footer { border-color: #292a3c; }
-html.dark .mykas-wallet-pill, html.dark .mykas-theme-toggle { border-color: #34354a; color: #c5c6d8; }
-html.dark .mykas-wallet-pill strong { color: #aaa5ff; }
-html.dark .mykas-content .bg-white, html.dark .mykas-auth-content .bg-white { background-color: #191a28 !important; }
-html.dark .mykas-content .text-slate-900 { color: #f4f4fa; }
-html.dark .mykas-content .text-slate-700, html.dark .mykas-content .text-slate-600 { color: #c5c6d8; }
-html.dark .mykas-content .border-slate-200 { border-color: #34354a; }
-html.dark .mykas-content .bg-slate-50 { background-color: #202131; }
-html.dark .mykas-content input, html.dark .mykas-content select, html.dark .mykas-content textarea { color-scheme: dark; }
-@media (max-width: 991.98px) { .mykas-aside { transform: translateX(-100%); } .mykas-wrapper { margin-left: 0; } .mykas-topbar { min-height: 72px; } }
-@media (max-width: 620px) { .mykas-topbar { align-items: flex-start; } .mykas-topbar-actions { flex-wrap: wrap; justify-content: flex-end; } .mykas-wallet-picker label { display: none; } .mykas-wallet-picker select { max-width: 145px; } .mykas-footer { flex-direction: column; } }
+/* MyKas Custom Enhancements for Metronic Demo 8 */
+:root {
+  --mykas-primary: #009ef7;
+  --mykas-success: #50cd89;
+  --mykas-danger: #f1416c;
+  --mykas-warning: #ffc700;
+}
+
+/* Ensure font is Poppins */
+body, .table, .btn, .form-control, .form-select {
+  font-family: Poppins, Helvetica, "sans-serif";
+}
+
+/* Radio Card Styling for Transaction Form */
+.mykas-radio-card {
+  display: block;
+  cursor: pointer;
+  border: 2px solid #eff2f5;
+  border-radius: 0.65rem;
+  padding: 1rem 1.25rem;
+  transition: all 0.2s ease;
+  background-color: #ffffff;
+}
+
+.mykas-radio-card:hover {
+  border-color: #b5b5c3;
+}
+
+.mykas-radio-card input[type="radio"] {
+  display: none;
+}
+
+.mykas-radio-card.income-card:has(input:checked) {
+  border-color: #50cd89;
+  background-color: rgba(80, 205, 137, 0.08);
+}
+
+.mykas-radio-card.expense-card:has(input:checked) {
+  border-color: #f1416c;
+  background-color: rgba(241, 65, 108, 0.08);
+}
+
+/* Flashes / Alerts */
+.mykas-flashes {
+  margin-bottom: 1.5rem;
+}
+
+/* Auth Layout background */
+.mykas-auth-bg {
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  background-size: contain;
+  background-attachment: fixed;
+}
+
+/* Aside logo styling */
+.mykas-logo-text {
+  letter-spacing: -0.02em;
+}
+
+/* Stat card icon symbols */
+.symbol-light-success .symbol-label {
+  background-color: #e8fff3;
+  color: #50cd89;
+}
+
+.symbol-light-danger .symbol-label {
+  background-color: #fff5f8;
+  color: #f1416c;
+}
+
+.symbol-light-primary .symbol-label {
+  background-color: #f1faff;
+  color: #009ef7;
+}
+
+.symbol-light-warning .symbol-label {
+  background-color: #fff8dd;
+  color: #ffc700;
+}

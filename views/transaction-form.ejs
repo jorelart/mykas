@@ -1,9 +1,165 @@
 <%- include('partials/header') %>
-<div class="mx-auto max-w-6xl space-y-7 px-5 py-8 sm:px-8 lg:px-10"><section class="flex items-end justify-between gap-4"><div><p class="text-sm font-bold uppercase tracking-[.18em] text-indigo-600 dark:text-indigo-300"><%= editing ? 'Perubahan pencatatan' : 'Pencatatan manual' %></p><h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white"><%= editing ? 'Edit transaksi' : 'Tambah transaksi' %></h1><p class="mt-2 text-base text-slate-600 dark:text-slate-300"><%= editing ? 'Perbarui informasi transaksi Anda.' : 'Catat detail pemasukan atau pengeluaran Anda.' %></p></div><a class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" href="<%= editing ? `/transaksi/${transaction.id}` : '/transaksi' %>">← Kembali</a></section>
-<div class="grid gap-6 md:grid-cols-[minmax(0,1fr)_19rem]"><form method="post" action="<%= editing ? `/transaksi/${transaction.id}/edit` : '/transaksi/tambah' %>" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-7"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><div class="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-700"><div><h2 class="font-bold text-slate-900 dark:text-white">Detail transaksi</h2><p class="mt-1 text-sm text-slate-600 dark:text-slate-300">Isi informasi transaksi dengan lengkap.</p></div><span class="rounded-lg bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200"><%= editing ? formatTransactionReference(transaction.id) : '01' %></span></div>
-<fieldset><legend class="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Jenis transaksi</legend><div class="grid gap-3 sm:grid-cols-2"><label class="flex cursor-pointer items-center gap-3 rounded-xl border border-emerald-200 p-4 has-[:checked]:bg-emerald-50 has-[:checked]:ring-2 has-[:checked]:ring-emerald-500 dark:border-emerald-900 dark:has-[:checked]:bg-emerald-950/40"><input class="h-4 w-4 accent-emerald-600" type="radio" name="kind" value="income" <%= !editing || transaction.kind === 'income' ? 'checked' : '' %>><span><strong class="block text-sm text-slate-900 dark:text-white">Pemasukan</strong><small class="text-sm text-slate-600 dark:text-slate-300">Uang masuk</small></span></label><label class="flex cursor-pointer items-center gap-3 rounded-xl border border-rose-200 p-4 has-[:checked]:bg-rose-50 has-[:checked]:ring-2 has-[:checked]:ring-rose-500 dark:border-rose-900 dark:has-[:checked]:bg-rose-950/40"><input class="h-4 w-4 accent-rose-600" type="radio" name="kind" value="expense" <%= editing && transaction.kind === 'expense' ? 'checked' : '' %>><span><strong class="block text-sm text-slate-900 dark:text-white">Pengeluaran</strong><small class="text-sm text-slate-600 dark:text-slate-300">Uang keluar</small></span></label></div></fieldset>
-<label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Nominal transaksi<div class="mt-2 flex h-12 items-center rounded-xl border border-slate-300 bg-white focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900"><span class="border-r border-slate-200 px-4 text-sm font-bold text-slate-500 dark:border-slate-700">Rp</span><input class="min-w-0 flex-1 rounded-r-xl bg-transparent px-4 text-base font-semibold text-slate-900 outline-none dark:text-white" name="amount" type="number" min="1" step="1" placeholder="0" value="<%= editing ? transaction.amount : '' %>" required></div></label>
-<div class="grid gap-5 sm:grid-cols-2"><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Kategori<input class="mt-2 block h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="category" type="text" placeholder="Contoh: Gaji, Makanan" maxlength="80" value="<%= editing ? transaction.category : '' %>" required></label><label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Tanggal<input class="mt-2 block h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="happened_on" type="date" value="<%= editing ? new Date(transaction.happened_on).toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'}) : new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'}) %>" required></label></div>
-<label class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Catatan <span class="font-normal text-slate-500">(opsional)</span><textarea class="mt-2 block w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-slate-600 dark:bg-slate-900 dark:text-white" name="note" rows="3" maxlength="240" placeholder="Tambahkan keterangan transaksi..."><%= editing ? transaction.note || '' : '' %></textarea></label><div class="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5 dark:border-slate-700"><a class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700" href="<%= editing ? `/transaksi/${transaction.id}` : '/transaksi' %>">Batal</a><button class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white hover:bg-indigo-700"><%= editing ? 'Simpan perubahan' : 'Simpan transaksi' %></button></div></form>
-<aside class="h-fit rounded-2xl border border-indigo-100 bg-indigo-50 p-5 dark:border-indigo-900/60 dark:bg-indigo-950/40"><span class="grid h-10 w-10 place-items-center rounded-xl bg-white text-lg text-indigo-700 shadow-sm dark:bg-slate-800 dark:text-indigo-300">✦</span><h2 class="mt-4 font-bold text-slate-900 dark:text-white"><%= editing ? 'Periksa kembali perubahan' : 'Pencatatan yang konsisten' %></h2><p class="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300"><%= editing ? 'Perubahan nominal, jenis, atau tanggal akan langsung tercermin pada dashboard dan laporan.' : 'Catat transaksi segera setelah terjadi agar laporan keuangan Anda tetap akurat.' %></p><ol class="mt-5 space-y-3 border-t border-indigo-200 pt-4 text-sm text-slate-700 dark:border-indigo-900 dark:text-slate-200"><li><strong class="mr-2 text-indigo-700 dark:text-indigo-300">01</strong>Pilih jenis transaksi.</li><li><strong class="mr-2 text-indigo-700 dark:text-indigo-300">02</strong>Gunakan kategori yang konsisten.</li><li><strong class="mr-2 text-indigo-700 dark:text-indigo-300">03</strong>Tambahkan catatan bila perlu.</li></ol></aside></div></div>
+
+<div class="row g-7">
+  <!--begin::Form Column-->
+  <div class="col-lg-8">
+    <div class="card card-flush shadow-sm">
+      <div class="card-header align-items-center py-5">
+        <div class="card-title">
+          <div>
+            <h2 class="fs-4 fw-bolder text-gray-900 mb-0"><%= editing ? 'Edit Transaksi' : 'Tambah Transaksi Baru' %></h2>
+            <span class="fs-7 text-muted fw-bold"><%= editing ? 'Perbarui informasi transaksi keuangan Anda.' : 'Catat detail pemasukan atau pengeluaran secara manual.' %></span>
+          </div>
+        </div>
+        <div class="card-toolbar">
+          <span class="badge badge-light-primary fw-bolder fs-7 px-3 py-2">
+            <%= editing ? formatTransactionReference(transaction.id) : 'Baru' %>
+          </span>
+        </div>
+      </div>
+
+      <form method="post" action="<%= editing ? `/transaksi/${transaction.id}/edit` : '/transaksi/tambah' %>" class="form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+
+        <div class="card-body pt-0">
+          <!--begin::Jenis Transaksi-->
+          <div class="mb-7">
+            <label class="required fs-6 fw-bold mb-3 d-block">Jenis Transaksi</label>
+            <div class="row g-4">
+              <div class="col-sm-6">
+                <label class="mykas-radio-card income-card">
+                  <input type="radio" name="kind" value="income" <%= !editing || transaction.kind === 'income' ? 'checked' : '' %> />
+                  <div class="d-flex align-items-center">
+                    <div class="symbol symbol-40px symbol-light-success me-3">
+                      <span class="symbol-label">
+                        <span class="svg-icon svg-icon-2 svg-icon-success">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <rect opacity="0.5" x="11" y="18" width="13" height="2" rx="1" transform="rotate(-90 11 18)" fill="currentColor"/>
+                            <path d="M11.4343 15.4343L7.25 11.25C6.83579 10.8358 6.16421 10.8358 5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75L11.2929 18.2929C11.6834 18.6834 12.3166 18.6834 12.7071 18.2929L18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25L12.5657 15.4343C12.2533 15.7467 11.7467 15.7467 11.4343 15.4343Z" fill="currentColor"/>
+                          </svg>
+                        </span>
+                      </span>
+                    </div>
+                    <div>
+                      <div class="fw-bolder fs-6 text-gray-900">Pemasukan</div>
+                      <div class="text-muted fs-7">Uang masuk ke kas</div>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <div class="col-sm-6">
+                <label class="mykas-radio-card expense-card">
+                  <input type="radio" name="kind" value="expense" <%= editing && transaction.kind === 'expense' ? 'checked' : '' %> />
+                  <div class="d-flex align-items-center">
+                    <div class="symbol symbol-40px symbol-light-danger me-3">
+                      <span class="symbol-label">
+                        <span class="svg-icon svg-icon-2 svg-icon-danger">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <rect opacity="0.5" x="13" y="6" width="13" height="2" rx="1" transform="rotate(90 13 6)" fill="currentColor"/>
+                            <path d="M12.5657 8.56569L16.75 12.75C17.1642 13.1642 17.8358 13.1642 18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25L12.7071 5.70711C12.3166 5.31658 11.6834 5.31658 11.2929 5.70711L5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75C6.16421 13.1642 6.83579 13.1642 7.25 12.75L11.4343 8.56569C11.7467 8.25327 12.2533 8.25327 12.5657 8.56569Z" fill="currentColor"/>
+                          </svg>
+                        </span>
+                      </span>
+                    </div>
+                    <div>
+                      <div class="fw-bolder fs-6 text-gray-900">Pengeluaran</div>
+                      <div class="text-muted fs-7">Uang keluar dari kas</div>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+          <!--end::Jenis Transaksi-->
+
+          <!--begin::Nominal-->
+          <div class="fv-row mb-7">
+            <label class="required fs-6 fw-bold mb-2">Nominal Transaksi</label>
+            <div class="input-group input-group-solid">
+              <span class="input-group-text fw-bolder fs-6 text-gray-700">Rp</span>
+              <input type="number" min="1" step="1" name="amount" class="form-control form-control-solid fs-5 fw-bolder" placeholder="0" value="<%= editing ? transaction.amount : '' %>" required />
+            </div>
+          </div>
+          <!--end::Nominal-->
+
+          <!--begin::Kategori & Tanggal-->
+          <div class="row g-4 mb-7">
+            <div class="col-sm-6">
+              <label class="required fs-6 fw-bold mb-2">Kategori</label>
+              <input type="text" name="category" class="form-control form-control-solid" placeholder="Contoh: Gaji, Makanan, Transport" maxlength="80" value="<%= editing ? transaction.category : '' %>" required />
+            </div>
+            <div class="col-sm-6">
+              <label class="required fs-6 fw-bold mb-2">Tanggal Transaksi</label>
+              <input type="date" name="happened_on" class="form-control form-control-solid" value="<%= editing ? new Date(transaction.happened_on).toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'}) : new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'}) %>" required />
+            </div>
+          </div>
+          <!--end::Kategori & Tanggal-->
+
+          <!--begin::Catatan-->
+          <div class="fv-row mb-4">
+            <label class="fs-6 fw-bold mb-2">Catatan <span class="text-muted fw-normal fs-7">(opsional)</span></label>
+            <textarea name="note" class="form-control form-control-solid" rows="3" maxlength="240" placeholder="Tambahkan keterangan atau rincian transaksi..."><%= editing ? transaction.note || '' : '' %></textarea>
+          </div>
+          <!--end::Catatan-->
+        </div>
+
+        <div class="card-footer d-flex justify-content-end py-6 px-9 gap-3">
+          <a href="<%= editing ? `/transaksi/${transaction.id}` : '/transaksi' %>" class="btn btn-light">Batal</a>
+          <button type="submit" class="btn btn-primary fw-bolder"><%= editing ? 'Simpan Perubahan' : 'Simpan Transaksi' %></button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!--end::Form Column-->
+
+  <!--begin::Info Column-->
+  <div class="col-lg-4">
+    <div class="card card-flush bg-light-primary border border-primary border-dashed shadow-sm">
+      <div class="card-body p-7">
+        <div class="d-flex align-items-center mb-5">
+          <div class="symbol symbol-40px symbol-light-primary me-3">
+            <span class="symbol-label">
+              <span class="svg-icon svg-icon-2 svg-icon-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <path opacity="0.3" d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor"/>
+                  <path d="M10.8 16C10.6 16 10.4 15.9 10.3 15.7L7.3 12.7C7 12.4 7 11.9 7.3 11.6C7.6 11.3 8.1 11.3 8.4 11.6L10.8 14L15.6 9.2C15.9 8.9 16.4 8.9 16.7 9.2C17 9.5 17 10 16.7 10.3L11.3 15.7C11.2 15.9 11 16 10.8 16Z" fill="currentColor"/>
+                </svg>
+              </span>
+            </span>
+          </div>
+          <h3 class="fs-5 fw-bolder text-gray-900 mb-0">
+            <%= editing ? 'Pemeriksaan Perubahan' : 'Tips Pencatatan' %>
+          </h3>
+        </div>
+
+        <p class="fs-7 text-gray-600 mb-5 lh-base">
+          <%= editing 
+            ? 'Setiap perubahan nominal, jenis, atau tanggal akan secara otomatis memperbarui saldo dompet aktif, kartu statistik dashboard, serta ringkasan laporan.' 
+            : 'Catat transaksi segera setelah terjadi agar catatan keuangan Anda selalu mencerminkan kondisi saldo terkini.' 
+          %>
+        </p>
+
+        <div class="separator separator-dashed border-primary opacity-25 my-5"></div>
+
+        <div class="d-flex flex-column gap-3">
+          <div class="d-flex align-items-center">
+            <span class="badge badge-light-primary fw-bolder me-3">01</span>
+            <span class="fs-7 text-gray-700 fw-bold">Pilih jenis (Pemasukan / Pengeluaran)</span>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="badge badge-light-primary fw-bolder me-3">02</span>
+            <span class="fs-7 text-gray-700 fw-bold">Tentukan kategori yang konsisten</span>
+          </div>
+          <div class="d-flex align-items-center">
+            <span class="badge badge-light-primary fw-bolder me-3">03</span>
+            <span class="fs-7 text-gray-700 fw-bold">Sertakan catatan rincian jika perlu</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--end::Info Column-->
+</div>
+
 <%- include('partials/footer') %>

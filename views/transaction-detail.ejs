@@ -1,4 +1,93 @@
 <%- include('partials/header') %>
-<div class="mx-auto max-w-5xl space-y-7 px-5 py-8 sm:px-8 lg:px-10"><section class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p class="text-sm font-bold uppercase tracking-[.18em] text-indigo-600 dark:text-indigo-300">Riwayat pencatatan</p><h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Detail transaksi</h1><p class="mt-2 text-base text-slate-600 dark:text-slate-300">Informasi lengkap untuk transaksi yang dipilih.</p></div><div class="flex gap-2"><a class="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700" href="/transaksi/<%= transaction.id %>/edit">Edit transaksi</a><a class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" href="/transaksi">Kembali</a></div></section>
-<section class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800"><div class="border-b border-slate-200 bg-slate-50 p-6 dark:border-slate-700 dark:bg-slate-900/50 sm:p-8"><div class="flex flex-wrap items-center justify-between gap-3"><span class="rounded-full px-3 py-1.5 text-sm font-bold <%= transaction.kind === 'income' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200' : 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200' %>"><%= transaction.kind === 'income' ? 'Pemasukan' : 'Pengeluaran' %></span><span class="text-sm font-semibold text-slate-600 dark:text-slate-300">Dicatat melalui <%= transaction.source === 'whatsapp' ? 'WhatsApp' : 'dashboard' %></span></div><p class="mt-6 text-3xl font-bold tracking-tight <%= transaction.kind === 'income' ? 'text-emerald-700 dark:text-emerald-300' : 'text-rose-700 dark:text-rose-300' %>"><%= transaction.kind === 'income' ? '+' : '−' %> <%= formatRupiah(transaction.amount) %></p><p class="mt-3 text-sm font-semibold text-slate-600 dark:text-slate-300">ID transaksi · <span class="font-mono text-slate-900 dark:text-white"><%= formatTransactionReference(transaction.id) %></span></p></div><dl class="grid gap-0 sm:grid-cols-2"><div class="border-b border-slate-100 p-6 dark:border-slate-700 sm:border-r"><dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Tanggal transaksi</dt><dd class="mt-2 text-base font-bold text-slate-900 dark:text-white"><%= formatDate(transaction.happened_on) %></dd></div><div class="border-b border-slate-100 p-6 dark:border-slate-700"><dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Kategori</dt><dd class="mt-2 text-base font-bold text-slate-900 dark:text-white"><%= transaction.category %></dd></div><div class="border-b border-slate-100 p-6 dark:border-slate-700 sm:border-r"><dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Dompet</dt><dd class="mt-2 text-base font-bold text-slate-900 dark:text-white"><%= transaction.wallet_name || 'Belum ditetapkan' %></dd></div><div class="border-b border-slate-100 p-6 dark:border-slate-700"><dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Waktu dicatat</dt><dd class="mt-2 text-base font-bold text-slate-900 dark:text-white"><%= formatDate(transaction.created_at) %></dd></div><div class="p-6 sm:col-span-2"><dt class="text-sm font-semibold text-slate-500 dark:text-slate-400">Catatan</dt><dd class="mt-2 whitespace-pre-wrap text-base font-medium leading-7 text-slate-800 dark:text-slate-100"><%= transaction.note || 'Tidak ada catatan tambahan.' %></dd></div></dl></section><p class="text-sm leading-6 text-slate-600 dark:text-slate-300">ID transaksi dapat digunakan untuk merujuk catatan ini saat melihat riwayat atau menghubungi administrator.</p></div>
+
+<div class="card card-flush shadow-sm mb-7">
+  <!--begin::Card Header-->
+  <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+    <div class="card-title">
+      <div>
+        <h2 class="fs-4 fw-bolder text-gray-900 mb-0">Rincian Transaksi</h2>
+        <span class="fs-7 text-muted fw-bold">ID Referensi: <strong class="text-primary"><%= formatTransactionReference(transaction.id, transaction.happened_on) %></strong></span>
+      </div>
+    </div>
+    <div class="card-toolbar gap-2">
+      <a href="/transaksi/<%= transaction.id %>/edit" class="btn btn-sm btn-primary">
+        <span class="svg-icon svg-icon-3 me-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path opacity="0.3" d="M21.4 8.35303L19.241 10.511L13.485 4.755L15.643 2.59595C16.0248 2.21423 16.5426 1.99988 17.0825 1.99988C17.6224 1.99988 18.1402 2.21423 18.522 2.59595L21.4 5.474C21.7817 5.85581 21.9962 6.37355 21.9962 6.91345C21.9962 7.45335 21.7817 7.97122 21.4 8.35303ZM3.68699 21.932L9.88699 19.865L4.13099 14.109L2.06399 20.309C1.98815 20.5354 1.97703 20.7787 2.03189 21.0111C2.08674 21.2436 2.2054 21.4561 2.37449 21.6248C2.54359 21.7934 2.75641 21.9115 2.989 21.9658C3.22158 22.0201 3.4647 22.0084 3.69099 21.932H3.68699Z" fill="currentColor"/>
+            <path d="M5.574 21.3L3.692 21.928C3.46591 22.0032 3.22334 22.0141 2.99144 21.9594C2.75954 21.9046 2.54744 21.7864 2.3789 21.6179C2.21036 21.4495 2.09202 21.2375 2.03711 21.0056C1.9822 20.7737 1.99289 20.5312 2.06799 20.3051L2.696 18.422L5.574 21.3ZM4.13499 14.105L9.891 19.861L19.245 10.507L13.489 4.75098L4.13499 14.105Z" fill="currentColor"/>
+          </svg>
+        </span>
+        Edit
+      </a>
+      <a href="/transaksi" class="btn btn-sm btn-light">Kembali</a>
+    </div>
+  </div>
+  <!--end::Card Header-->
+
+  <!--begin::Card Body-->
+  <div class="card-body pt-0">
+    <!--begin::Amount Banner-->
+    <div class="rounded p-6 p-lg-8 mb-7 <%= transaction.kind === 'income' ? 'bg-light-success' : 'bg-light-danger' %> border <%= transaction.kind === 'income' ? 'border-success' : 'border-danger' %> border-dashed">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+        <div>
+          <span class="badge badge-<%= transaction.kind === 'income' ? 'success' : 'danger' %> fs-7 fw-bolder px-3 py-2 mb-2 d-inline-block">
+            <%= transaction.kind === 'income' ? 'Pemasukan' : 'Pengeluaran' %>
+          </span>
+          <div class="fs-2hx fw-bolder <%= transaction.kind === 'income' ? 'text-success' : 'text-danger' %>">
+            <%= transaction.kind === 'income' ? '+' : '−' %> <%= formatRupiah(transaction.amount) %>
+          </div>
+        </div>
+        <div class="text-sm-end">
+          <span class="badge badge-light-primary fw-bold fs-7 py-2 px-3">
+            Dicatat melalui: <%= transaction.source === 'whatsapp' ? 'WhatsApp Bot' : 'Dashboard' %>
+          </span>
+        </div>
+      </div>
+    </div>
+    <!--end::Amount Banner-->
+
+    <!--begin::Details Table-->
+    <div class="table-responsive">
+      <table class="table align-middle table-row-dashed fs-6 gy-4">
+        <tbody class="text-gray-700 fw-bold">
+          <tr>
+            <td class="text-muted min-w-150px">Tanggal Transaksi</td>
+            <td class="text-gray-900 fw-bolder"><%= formatDate(transaction.happened_on) %></td>
+          </tr>
+          <tr>
+            <td class="text-muted">Kategori</td>
+            <td><span class="badge badge-light fw-bolder fs-7"><%= transaction.category %></span></td>
+          </tr>
+          <tr>
+            <td class="text-muted">Dompet</td>
+            <td class="text-gray-900 fw-bolder"><%= transaction.wallet_name || 'Belum ditetapkan' %></td>
+          </tr>
+          <tr>
+            <td class="text-muted">Waktu Pencatatan</td>
+            <td class="text-gray-900"><%= formatDate(transaction.created_at) %></td>
+          </tr>
+          <tr>
+            <td class="text-muted align-top pt-4">Catatan</td>
+            <td class="pt-4">
+              <div class="p-4 bg-light rounded text-gray-800 fs-7 lh-base">
+                <%= transaction.note || 'Tidak ada catatan tambahan untuk transaksi ini.' %>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!--end::Details Table-->
+  </div>
+  <!--end::Card Body-->
+
+  <div class="card-footer d-flex justify-content-between py-6 px-9">
+    <form method="post" action="/transaksi/<%= transaction.id %>/hapus" class="delete-confirm-form m-0" data-confirm-message="Transaksi akan dihapus dari riwayat.">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
+      <button type="submit" class="btn btn-light-danger fw-bolder">Hapus Transaksi</button>
+    </form>
+    <a href="/transaksi" class="btn btn-light">Kembali ke Daftar</a>
+  </div>
+</div>
+
 <%- include('partials/footer') %>
