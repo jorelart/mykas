@@ -9,9 +9,10 @@ async function index(req, res) {
     req.flash('warning', 'Rentang tanggal tidak valid.');
     return res.redirect('/laporan');
   }
-  const activeWallet = await Wallet.activeForUser(req.session.user.id);
-  const report = await Transaction.report(req.session.user.id, start, end, activeWallet?.id || null);
-  return res.render('reports', { title: 'Laporan', ...report, start, end, activeWallet });
+  const activeWallet = await Wallet.activeOrFirstForUser(req.session.user.id);
+  const kind = ['income', 'expense'].includes(req.query.jenis) ? req.query.jenis : '';
+  const report = await Transaction.report(req.session.user.id, start, end, activeWallet?.id || null, kind);
+  return res.render('reports', { title: 'Laporan', ...report, start, end, kind, activeWallet });
 }
 
 function validDate(value) {

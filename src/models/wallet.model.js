@@ -18,6 +18,16 @@ async function activeForUser(userId) {
   return rows[0] || null;
 }
 
+async function activeOrFirstForUser(userId) {
+  let selected = await activeForUser(userId);
+  if (selected) return selected;
+  const wallets = await list(null, userId);
+  if (!wallets.length) return null;
+  await selectForUser(userId, wallets[0].id);
+  selected = await activeForUser(userId);
+  return selected;
+}
+
 async function create(connection, phone, userId, name) {
   const [result] = await connection.execute('INSERT INTO wallets(user_phone,user_id,name) VALUES(?,?,?)', [phone, userId, name]);
   return result.insertId;
@@ -56,4 +66,4 @@ async function deleteForUser(userId, walletId) {
   finally { connection.release(); }
 }
 
-module.exports = { active, activeForUser, create, createForUser, deleteForUser, list, select, selectForUser };
+module.exports = { active, activeForUser, activeOrFirstForUser, create, createForUser, deleteForUser, list, select, selectForUser };

@@ -4,8 +4,10 @@ const { formatTransactionReference } = require('../utils/transaction-reference')
 
 async function dashboard(req, res) {
   const wallets = await Wallet.list(null, req.session.user.id);
-  const activeWallet = await Wallet.activeForUser(req.session.user.id);
-  const data = await Transaction.dashboard(req.session.user.id, activeWallet?.id || null);
+  const activeWallet = await Wallet.activeOrFirstForUser(req.session.user.id);
+  const data = wallets.length
+    ? await Transaction.dashboard(req.session.user.id, activeWallet?.id || null)
+    : { summary: { income: 0, expense: 0, count: 0 }, total: 0, recent: [] };
   res.render('dashboard', {
     title: 'Dashboard', income: data.summary.income, expense: data.summary.expense,
     balance: Number(data.summary.income) - Number(data.summary.expense),
@@ -56,7 +58,7 @@ async function detail(req, res) {
 }
 
 async function list(req, res) {
-  const activeWallet = await Wallet.activeForUser(req.session.user.id);
+  const activeWallet = await Wallet.activeOrFirstForUser(req.session.user.id);
   const kind = ['income', 'expense'].includes(req.query.jenis) ? req.query.jenis : '';
   const start = validDate(req.query.dari), end = validDate(req.query.sampai);
   const rows = await Transaction.list(req.session.user.id, { kind, start, end, walletId: activeWallet?.id || 0 });

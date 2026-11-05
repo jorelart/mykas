@@ -100,11 +100,14 @@ async function assignToWallet(userId, transactionId, walletId) {
   finally { connection.release(); }
 }
 
-async function report(userId, start, end, walletId = null) {
-  const [totals] = await pool.execute('SELECT kind,COALESCE(SUM(amount),0) total FROM transactions WHERE user_id=? AND wallet_id=? AND deleted_at IS NULL AND happened_on BETWEEN ? AND ? GROUP BY kind', [userId, walletId || 0, start, end]);
+async function report(userId, start, end, walletId = null, kind = '') {
+  let typeFilter = '';
+  const params = [userId, walletId || 0, start, end];
+  if (kind) { typeFilter = ' AND kind=?'; params.push(kind); }
+  const [totals] = await pool.execute(`SELECT kind,COALESCE(SUM(amount),0) total FROM transactions WHERE user_id=? AND wallet_id=? AND deleted_at IS NULL AND happened_on BETWEEN ? AND ?${typeFilter} GROUP BY kind`, params);
   const summary = Object.fromEntries(totals.map(row => [row.kind, Number(row.total)]));
-  const [categories] = await pool.execute('SELECT category,kind,SUM(amount) total FROM transactions WHERE user_id=? AND wallet_id=? AND deleted_at IS NULL AND happened_on BETWEEN ? AND ? GROUP BY category,kind ORDER BY total DESC', [userId, walletId || 0, start, end]);
-  const rows = await list(userId, { start, end, limit: 500, walletId: walletId || 0 });
+  const [categories] = await pool.execute(`SELECT category,kind,SUM(amount) total FROM transactions WHERE user_id=? AND wallet_id=? AND deleted_at IS NULL AND happened_on BETWEEN ? AND ?${typeFilter} GROUP BY category,kind ORDER BY total DESC`, params);
+  const rows = await list(userId, { start, end, kind, limit: 500, walletId: walletId || 0 });
   return { income: summary.income || 0, expense: summary.expense || 0, categories, rows };
 }
 

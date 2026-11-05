@@ -2,13 +2,17 @@ const Wallet = require('../models/wallet.model');
 
 async function index(req, res) {
   const wallets = await Wallet.list(null, req.session.user.id);
-  const activeWallet = await Wallet.activeForUser(req.session.user.id);
+  const activeWallet = await Wallet.activeOrFirstForUser(req.session.user.id);
   return res.render('wallets', { title: 'Dompet', wallets, activeWallet });
 }
 
 async function create(req, res) {
+  const returnTo = req.body.return_to === '/dashboard' ? '/dashboard' : '/dompet';
   const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
-  if (!name || name.length > 60) req.flash('danger', 'Nama dompet wajib diisi dan maksimal 60 karakter.');
+  if (!name || name.length > 60) {
+    req.flash('danger', 'Nama dompet wajib diisi dan maksimal 60 karakter.');
+    return res.redirect(returnTo);
+  }
   else {
     try {
       const id = await Wallet.createForUser(req.session.user.id, name);
@@ -19,7 +23,7 @@ async function create(req, res) {
       req.flash('warning', `Dompet “${name}” sudah ada.`);
     }
   }
-  return res.redirect('/dompet');
+  return res.redirect(returnTo);
 }
 
 async function select(req, res) {
