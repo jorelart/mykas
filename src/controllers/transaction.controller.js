@@ -3,12 +3,13 @@ const Wallet = require('../models/wallet.model');
 const { formatTransactionReference } = require('../utils/transaction-reference');
 
 async function dashboard(req, res) {
+  const wallets = await Wallet.list(null, req.session.user.id);
   const activeWallet = await Wallet.activeForUser(req.session.user.id);
   const data = await Transaction.dashboard(req.session.user.id, activeWallet?.id || null);
   res.render('dashboard', {
     title: 'Dashboard', income: data.summary.income, expense: data.summary.expense,
     balance: Number(data.summary.income) - Number(data.summary.expense),
-    monthCount: data.summary.count, count: data.total, recent: data.recent, activeWallet,
+    monthCount: data.summary.count, count: data.total, recent: data.recent, activeWallet, wallets,
   });
 }
 
@@ -55,11 +56,12 @@ async function detail(req, res) {
 }
 
 async function list(req, res) {
+  const activeWallet = await Wallet.activeForUser(req.session.user.id);
   const kind = ['income', 'expense'].includes(req.query.jenis) ? req.query.jenis : '';
   const start = validDate(req.query.dari), end = validDate(req.query.sampai);
-  const rows = await Transaction.list(req.session.user.id, { kind, start, end });
+  const rows = await Transaction.list(req.session.user.id, { kind, start, end, walletId: activeWallet?.id || 0 });
   const wallets = await Wallet.list(null, req.session.user.id);
-  res.render('transactions', { title: 'Transaksi', rows, wallets, kind, start: start || '', end: end || '' });
+  res.render('transactions', { title: 'Transaksi', rows, wallets, activeWallet, kind, start: start || '', end: end || '' });
 }
 
 async function assignWallet(req, res) {

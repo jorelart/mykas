@@ -12,4 +12,5 @@ document.addEventListener('submit', async (event) => {
     HTMLFormElement.prototype.submit.call(form);
   }
 });
+document.querySelector(".theme-toggle")?.addEventListener("click",()=>{const dark=document.documentElement.classList.toggle("dark-mode");try{localStorage.setItem("mykas-theme",dark?"dark":"light")}catch(e){}});
 </script></body></html>

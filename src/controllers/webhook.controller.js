@@ -55,7 +55,7 @@ async function evolution(req, res) {
       await connection.commit(); log('ignored', { reason: 'sender_not_verified', event: eventName });
       return res.json({ status: 'unmatched_sender' });
     }
-    const walletCommand = String(text).trim().match(/^\/(?:dompet(?:\s+(create|list|delete))?|wallets)(?:\s+(.+))?$/i);
+    const walletCommand = String(text).trim().match(/^\/?(?:dompet(?:\s+(create|list|delete))?|wallets)(?:\s+(.+))?$/i);
     const selectMatch = String(text).trim().match(/^\/select\s+(.+)$/i);
     if (walletCommand || selectMatch) {
       let reply;
@@ -70,6 +70,14 @@ async function evolution(req, res) {
       } else {
         const action = walletCommand[1] ? walletCommand[1].toLowerCase() : 'list';
         const name = (walletCommand[2] || '').trim();
+        if (!walletCommand[1] && name) {
+          const [rows] = await connection.execute('SELECT id,name,balance FROM wallets WHERE user_id=? AND name=? LIMIT 1', [user.id, name]);
+          if (!rows.length) reply = `Dompet *${name}* tidak ditemukan. Ketik */dompet* untuk melihat dompet Anda.`;
+          else {
+            await Wallet.select(connection, phone, rows[0].id);
+            reply = `✅ Dompet aktif dipilih: *${rows[0].name}* (${formatMoney(rows[0].balance)}). Transaksi berikutnya akan masuk ke dompet ini.`;
+          }
+        } else
         if (action === 'create') {
           if (!name || name.length > 60) reply = 'Format: */dompet create [nama]* (maksimal 60 karakter).';
           else {
@@ -79,7 +87,7 @@ async function evolution(req, res) {
               if (Number(countRows[0].total) === 1) await Wallet.select(connection, phone, id);
               reply = Number(countRows[0].total) === 1
                 ? `✅ Dompet *${name}* dibuat dan dipilih sebagai dompet aktif. Saldo: ${formatMoney(0)}.`
-                : `✅ Dompet *${name}* berhasil dibuat. Pilih dengan */select ${name}*.`;
+              : `✅ Dompet *${name}* berhasil dibuat. Pilih dengan */dompet ${name}*.`;
             } catch (error) {
               if (error.code !== 'ER_DUP_ENTRY') throw error;
               reply = `Dompet *${name}* sudah ada.`;
@@ -101,7 +109,7 @@ async function evolution(req, res) {
           const wallets = await Wallet.list(connection, user.id);
           const active = await Wallet.active(connection, phone, user.id);
           reply = wallets.length
-            ? `*Dompet Anda*${active ? `\nAktif: *${active.name}*` : ''}\n${wallets.map(w => `${active?.id === w.id ? '✓ AKTIF' : '-'} ${w.name}: ${formatMoney(w.balance)}`).join('\n')}\n\nPilih dompet: */select [nama]*`
+            ? `*Dompet Anda*${active ? `\nAktif: *${active.name}*` : ''}\n${wallets.map(w => `${active?.id === w.id ? '✓ AKTIF' : '-'} ${w.name}: ${formatMoney(w.balance)}`).join('\n')}\n\nPilih dompet: */dompet [nama]*`
             : 'Anda belum memiliki dompet. Buat dengan */dompet create [nama]*.';
         }
       }

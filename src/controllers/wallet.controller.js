@@ -26,7 +26,8 @@ async function select(req, res) {
   const id = Number(req.body.wallet_id);
   const selected = Number.isSafeInteger(id) && id > 0 && await Wallet.selectForUser(req.session.user.id, id);
   req.flash(selected ? 'success' : 'warning', selected ? 'Dompet aktif berhasil diganti.' : 'Dompet tidak ditemukan.');
-  return res.redirect('/dompet');
+  const returnTo = ['/dashboard', '/transaksi'].includes(req.body.return_to) ? req.body.return_to : '/dompet';
+  return res.redirect(returnTo);
 }
 
 async function remove(req, res) {
