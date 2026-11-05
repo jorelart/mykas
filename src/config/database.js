@@ -18,7 +18,7 @@ const schema = [
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL, email VARCHAR(160) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL, whatsapp_number VARCHAR(24) NOT NULL UNIQUE,
-    is_verified TINYINT(1) NOT NULL DEFAULT 1,
+    is_verified TINYINT(1) NOT NULL DEFAULT 1, is_suspended TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
   `CREATE TABLE IF NOT EXISTS transactions (
@@ -77,6 +77,8 @@ async function initializeDatabase() {
       try { await pool.query('ALTER TABLE transactions ADD COLUMN deleted_at TIMESTAMP NULL DEFAULT NULL'); }
       catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error; }
       try { await pool.query('ALTER TABLE users ADD COLUMN is_verified TINYINT(1) NOT NULL DEFAULT 1'); }
+      catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error; }
+      try { await pool.query('ALTER TABLE users ADD COLUMN is_suspended TINYINT(1) NOT NULL DEFAULT 0'); }
       catch (error) { if (error.code !== 'ER_DUP_FIELDNAME') throw error; }
       return;
     } catch (error) {

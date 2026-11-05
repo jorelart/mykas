@@ -37,6 +37,7 @@ Untuk mengaktifkan panel admin, isi `ADMIN_EMAIL` di `.env` dengan email admin. 
 ## Fitur
 
 - Registrasi dan login dengan hash kata sandi, sesi tersimpan di MySQL, dan perlindungan CSRF untuk formulir.
+- Profil pengguna dapat diperbarui, kata sandi dapat diganti dengan verifikasi kata sandi saat ini, dan admin dapat menangguhkan akun atau memulai reset melalui OTP WhatsApp.
 - Aktivasi pendaftar dan reset kata sandi melalui OTP WhatsApp 6 digit (berlaku 5 menit, maksimal 5 percobaan, jeda 60 detik untuk kirim ulang).
 - Setelah aktivasi, pengguna menerima pesan WhatsApp selamat datang yang berisi daftar command bot.
 - Dashboard bulanan dan riwayat transaksi dengan Tailwind CSS, tema gelap, pemilih dompet aktif, transaksi pemasukan/pengeluaran, filter riwayat, soft delete transaksi, dan laporan periode/kategori.

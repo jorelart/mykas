@@ -1,7 +1,15 @@
+const User = require('../models/user.model');
+
 function requireAuth(req, res, next) {
-  if (req.session.user) return next();
-  req.flash('info', 'Silakan masuk untuk melanjutkan.');
-  return res.redirect('/login');
+  if (!req.session.user) {
+    req.flash('info', 'Silakan masuk untuk melanjutkan.');
+    return res.redirect('/login');
+  }
+  User.isSuspended(req.session.user.id).then(suspended => {
+    if (!suspended) return next();
+    res.locals.user = null;
+    return req.session.destroy(() => res.status(403).render('error', { title: 'Akun ditangguhkan', message: 'Akun ini sedang ditangguhkan. Hubungi administrator MyKas untuk bantuan.' }));
+  }).catch(next);
 }
 
 function requireAdmin(req, res, next) {
