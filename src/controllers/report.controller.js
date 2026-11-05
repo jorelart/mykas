@@ -10,9 +10,10 @@ async function index(req, res) {
     return res.redirect('/laporan');
   }
   const activeWallet = await Wallet.activeOrFirstForUser(req.session.user.id);
+  const wallets = await Wallet.list(null, req.session.user.id);
   const kind = ['income', 'expense'].includes(req.query.jenis) ? req.query.jenis : '';
   const report = await Transaction.report(req.session.user.id, start, end, activeWallet?.id || null, kind);
-  return res.render('reports', { title: 'Laporan', ...report, start, end, kind, activeWallet });
+  return res.render('reports', { title: 'Laporan', ...report, start, end, kind, activeWallet, wallets });
 }
 
 function validDate(value) {
