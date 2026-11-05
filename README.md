@@ -15,8 +15,12 @@ src/
   middleware/               autentikasi, CSRF, async handler, dan access log
   utils/                    integrasi Evolution API dan parser pesan WhatsApp
 views/                      template EJS
-static/                     CSS dan aset frontend
+static/                     CSS hasil build Tailwind dan aset frontend
 ```
+
+## Tailwind CSS
+
+Dashboard dan riwayat transaksi menggunakan Tailwind CSS 4 yang dibangun dengan Tailwind CLI dan dipakai langsung oleh template EJS. Saat production, Docker membangun `static/css/tailwind.css` pada tahap build image; file hasil build dikecualikan dari Git dan konteks Docker agar container selalu memakai output terbaru. Untuk mengembangkan UI langsung di host, jalankan `npm install` lalu `npm run watch:css` di terminal terpisah agar perubahan template dan CSS segera dibangun ulang.
 
 ## Menjalankan dengan Docker
 
@@ -35,7 +39,7 @@ Untuk mengaktifkan panel admin, isi `ADMIN_EMAIL` di `.env` dengan email admin. 
 - Registrasi dan login dengan hash kata sandi, sesi tersimpan di MySQL, dan perlindungan CSRF untuk formulir.
 - Aktivasi pendaftar dan reset kata sandi melalui OTP WhatsApp 6 digit (berlaku 5 menit, maksimal 5 percobaan, jeda 60 detik untuk kirim ulang).
 - Setelah aktivasi, pengguna menerima pesan WhatsApp selamat datang yang berisi daftar command bot.
-- Dashboard bulanan, transaksi pemasukan/pengeluaran, filter riwayat, soft delete transaksi, dan laporan periode/kategori.
+- Dashboard bulanan dan riwayat transaksi dengan Tailwind CSS, tema gelap, pemilih dompet aktif, transaksi pemasukan/pengeluaran, filter riwayat, soft delete transaksi, dan laporan periode/kategori.
 - Detail transaksi dengan tanggal, sumber, catatan, serta ID nomor urut seperti `MK-000123`.
 - Setelah OTP benar, dashboard menampilkan ucapan bahwa pendaftaran berhasil dan akun telah aktif.
 - Transaksi bisa diedit dari halaman detail atau daftar. Bot WhatsApp menerima `!help`/`!bantuan`/`!menu`, `!masuk`/`!pemasukan`, `!keluar`/`!pengeluaran`, `!hapus MK-000123` (lalu `!konfirmasi hapus` atau `!batal hapus` dalam 5 menit), `!terhapus`, `!restore MK-000123`/`!pulihkan MK-000123`, `!saldo`, `!laporan`, `!laporan mingguan`/`!laporan weekly`, `!laporan bulanan`/`!laporan monthly`, dan `!dashboard`.

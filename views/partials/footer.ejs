@@ -1,4 +1,4 @@
-<% if (user) { %></section><footer class="footer">© 2026 MyKas <span>Keuangan lebih tertata, keputusan lebih bermakna.</span></footer></main></div><% } else { %></div><div class="auth-foot">© 2026 MyKas · Catatan keuangan Anda, dalam satu tempat.</div></main><% } %><script>
+<% if (user) { %></section><footer class="footer border-t border-slate-200 px-5 py-4 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 sm:px-8">© 2026 MyKas <span>Keuangan lebih tertata, keputusan lebih bermakna.</span></footer></main></div><% } else { %></div><div class="auth-foot">© 2026 MyKas · Catatan keuangan Anda, dalam satu tempat.</div></main><% } %><script>
 document.addEventListener('submit', async (event) => {
   const form = event.target.closest('.delete-confirm-form');
   if (!form || form.dataset.confirmed === 'true') return;
@@ -12,5 +12,5 @@ document.addEventListener('submit', async (event) => {
     HTMLFormElement.prototype.submit.call(form);
   }
 });
-document.querySelector(".theme-toggle")?.addEventListener("click",()=>{const dark=document.documentElement.classList.toggle("dark-mode");try{localStorage.setItem("mykas-theme",dark?"dark":"light")}catch(e){}});
+document.querySelector(".theme-toggle")?.addEventListener("click",()=>{const dark=document.documentElement.classList.toggle("dark");try{localStorage.setItem("mykas-theme",dark?"dark":"light")}catch(e){}});
 </script></body></html>
